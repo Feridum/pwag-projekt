@@ -5,7 +5,8 @@
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/glut.h"
 #include "GL/glext.h"
-
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 using namespace std;
 
@@ -13,13 +14,10 @@ using namespace std;
 static int programHandle; // obiekt programu
 static int vertexShaderHandle; // obiekt shadera wierzcho³ków
 static int fragmentShaderHandle; // obiekt shadera fragmentów
-static int geomShaderHandle; // obiekt shadera fragmentów
+static int geomShaderHandle; // obiekt shadera geometrii
 
+unsigned int texture1;
 
-static float time;
-static GLint uTime;
-static int level;
-static GLint uLevel;
 GLuint vbo_id[1];
 GLfloat xyz[20 * 3][3] = { 0 };
 
@@ -48,6 +46,8 @@ PFNGLDELETEBUFFERSPROC glDeleteBuffers = NULL;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = NULL;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray = NULL;
+PFNGLGENERATEMIPMAPPROC glGenerateMipmap = NULL;
+PFNGLACTIVETEXTUREPROC glActiveTexture = NULL;
 
 // funkcja do odczytu kodu shaderow
 char* readShader(const char* aShaderFile)
@@ -66,58 +66,57 @@ char* readShader(const char* aShaderFile)
 	return content;
 }
 
-//SFERA
-#define X .525731112119133606 
-#define Z .850650808352039932
+GLfloat Z = 0;
 
-static GLfloat vdata[12][3] = {
-	{-X, 0.0, Z}, {X, 0.0, Z}, {-X, 0.0, -Z}, {X, 0.0, -Z},
-	{0.0, Z, X}, {0.0, Z, -X}, {0.0, -Z, X}, {0.0, -Z, -X},
-	{Z, X, 0.0}, {-Z, X, 0.0}, {Z, -X, 0.0}, {-Z, -X, 0.0}
+static GLfloat vdata[6][5] = { 
+	{-0.5, Z, 0.0, 1.0, 1.0}, {-0.5, Z, 0.5, 1.0, 0.0 }, {0.5, Z, 0.5, 0.0, 0.0},
+	{0.5, Z, 0.5, 1.0, 1.0}, {0.5, Z, 0.0, 1.0, 0.0}, {-0.5, Z, 0.0, 0.0}
 };
-static GLuint tindices[20][3] = {
-	{0,4,1}, {0,9,4}, {9,5,4}, {4,5,8}, {4,8,1},
-	{8,10,1}, {8,3,10}, {5,3,8}, {5,2,3}, {2,7,3},
-	{7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6},
-	{6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11} };
 
 
-
-void sphere(float r = 1.0) {
-
-	int k = 0;
-	for (int i = 0; i < 20; i++) {
-		for (int j = 0; j < 3; j++) {
-			xyz[k][j] = r * vdata[tindices[i][0]][j];
-		}
-		k++;
-		for (int j = 0; j < 3; j++) {
-			xyz[k][j] = r * vdata[tindices[i][1]][j];
-		}
-		k++;
-		for (int j = 0; j < 3; j++) {
-			xyz[k][j] = r * vdata[tindices[i][2]][j];
-		}
-		k++;
-	}
-
-
+void terrain() {
 	glGenBuffers(1, vbo_id);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 20 * 3 * 3, xyz, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata)	, vdata, GL_STATIC_DRAW);
 
+	glGenTextures(1, &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	// set the texture wrapping/filtering options (on the currently bound texture object)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// load and generate the texture
+	int width, height, nrChannels;
+	unsigned char* data = stbi_load("wall.jpg", &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
 }
 
+void drawTerrain() {
 
-
-void drawsphere() {
-	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
+	glEnableVertexAttribArray(0);
 
-	glDrawArrays(GL_TRIANGLES, 0, 20 * 3);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
 
 }
 
@@ -184,14 +183,7 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 		std::cout << infoLog;
 	}
 
-
-
-	uTime = glGetUniformLocation(programHandle, "time");
-	time = 1;
-	uLevel = glGetUniformLocation(programHandle, "level");
-	level = 5;
-
-
+	glUniform1i(glGetUniformLocation(programHandle, "texture1"), 0);
 }
 
 // Drawing (display) routine.
@@ -205,19 +197,14 @@ void drawScene(void)
 	glColor3f(0.0, 0.0, 0.0);
 	//glFrontFace(GL_CW);
 	// Set polygon mode.
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
 
 	glUseProgram(programHandle);
 
-	//przekazanie czasu i poziomu
-	glUniform1f(uTime, time);
-	glUniform1i(uLevel, level);
-
-	drawsphere();
-
+	drawTerrain();
 
 	// Flush created objects to the screen, i.e., force rendering.
 	glutSwapBuffers();
@@ -249,7 +236,7 @@ void resize(int w, int h)
 
 	// Specify the orthographic (or perpendicular) projection, 
 	// i.e., define the viewing box.
-	glOrtho(-3.0, 3.0, -3.0, 3.0, -1.0, 1.0);
+	gluPerspective(30, w / h, 0.1, 1000);
 
 	//
 	// glFrustum(-10.0, 10.0, -10.0, 10.0, 0.0, 200.0);
@@ -296,12 +283,10 @@ void extensionSetup()
 		glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)wglGetProcAddress("glVertexAttribPointer");
 		glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)wglGetProcAddress("glEnableVertexAttribArray");
 		glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)wglGetProcAddress("glDisableVertexAttribArray");
+		glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)wglGetProcAddress("glGenerateMipmap");
+		glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
 	}
 
-}
-void pickFunction(int button, int state, int x, int y)
-{
-	time += 0.01;//zmiana czasu!!!
 }
 
 // Main routine: defines window properties, creates window,
@@ -326,11 +311,10 @@ int main(int argc, char** argv)
 	// Initialize.
 	setup();
 	extensionSetup();
-	sphere();
+	terrain();
 
 	// Register display routine.
 	glutDisplayFunc(drawScene);
-	glutMouseFunc(pickFunction); // Mouse control.
 	// Register reshape routine.
 	glutReshapeFunc(resize);
 
