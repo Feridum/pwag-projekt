@@ -6,7 +6,7 @@ layout( triangles ) in;
 
 //wyjsciowym prymitywem powinny byc punkty!!!
 //layout( points, max_vertices=200 ) out;
-layout(triangle_strip, max_vertices = 200) out;
+layout(triangle_strip, max_vertices = 150) out;
 
 
 vec4 CG;
@@ -22,7 +22,7 @@ void main() {
 	vec4 v1 = gl_in[1].gl_Position;
 	vec4 v2 = gl_in[2].gl_Position;
 
-	float division = pow(2, 4);
+	float division = pow(2, 3);
 
 	float step = 1/division;
 

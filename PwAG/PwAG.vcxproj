@@ -129,6 +129,8 @@
     <None Include="subdiv.fs" />
     <None Include="subdiv.vs" />
     <None Include="subdiv_p.geom" />
+    <None Include="terrain.es" />
+    <None Include="terrain.tcs" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h" />

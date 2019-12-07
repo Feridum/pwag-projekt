@@ -29,6 +29,12 @@
     <None Include="subdiv_p.geom">
       <Filter>Pliki źródłowe</Filter>
     </None>
+    <None Include="terrain.es">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
+    <None Include="terrain.tcs">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">

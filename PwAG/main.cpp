@@ -15,6 +15,9 @@ static int programHandle; // obiekt programu
 static int vertexShaderHandle; // obiekt shadera wierzcho³ków
 static int fragmentShaderHandle; // obiekt shadera fragmentów
 static int geomShaderHandle; // obiekt shadera geometrii
+static int tcsShaderHandle; // obiekt shadera geometrii
+static int esShaderHandle; // obiekt shadera geometrii
+
 
 unsigned int texture1;
 
@@ -113,7 +116,7 @@ void drawTerrain() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture1);
 
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(GL_PATCHES, 0, 6);
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
@@ -121,30 +124,34 @@ void drawTerrain() {
 }
 
 // incjalizacja shaderów
-void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, const char* geom)
+void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, const char* geom, const char* tcs, const char* es)
 {
 	GLint status = 0;
 
 	char* vertexShader = readShader(vertexShaderFile);
 	char* fragmentShader = readShader(fragmentShaderFile);
-
 	char* geomShader = readShader(geom);
+	char* tcsShader = readShader(tcs);
+	char* esShader = readShader(es);
 
 	programHandle = glCreateProgram(); // tworzenie obiektu programu
 	vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER); // shader wierzcho³ków
 	fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER); // shader fragmentów
 	geomShaderHandle = glCreateShader(GL_GEOMETRY_SHADER); // shader fragmentów
+	tcsShaderHandle = glCreateShader(GL_TESS_CONTROL_SHADER); // shader tcs
+	esShaderHandle = glCreateShader(GL_TESS_EVALUATION_SHADER); // shader es
 
 	glShaderSource(vertexShaderHandle, 1, (const char**)&vertexShader, NULL); // ustawianie Ÿród³a shadera wierzcho³ków
 	glShaderSource(fragmentShaderHandle, 1, (const char**)&fragmentShader, NULL); // ustawianie Ÿród³a shadera fragmentów
-	glShaderSource(geomShaderHandle, 1, (const char**)&geomShader, NULL); // ustawianie Ÿród³a shadera fragmentów
-
+	glShaderSource(tcsShaderHandle, 1, (const char**)&tcsShader, NULL); // ustawianie Ÿród³a shadera fragmentów
+	glShaderSource(esShaderHandle, 1, (const char**)&esShader, NULL); // ustawianie Ÿród³a shadera fragmentów
 
 	// kompilacja shaderów
 	glCompileShader(vertexShaderHandle);
 	glCompileShader(fragmentShaderHandle);
 	glCompileShader(geomShaderHandle);
-
+	glCompileShader(tcsShaderHandle);
+	glCompileShader(esShaderHandle);
 
 
 	/* error check */
@@ -168,8 +175,10 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 
 	//dodanie shaderów do programu
 	glAttachShader(programHandle, vertexShaderHandle);
+	glAttachShader(programHandle, tcsShaderHandle);
+	glAttachShader(programHandle, esShaderHandle);
 	glAttachShader(programHandle, fragmentShaderHandle);
-	glAttachShader(programHandle, geomShaderHandle);
+	//glAttachShader(programHandle, geomShaderHandle);
 
 	/* link */
 	//uruchomienie
@@ -197,7 +206,7 @@ void drawScene(void)
 	glColor3f(0.0, 0.0, 0.0);
 	//glFrontFace(GL_CW);
 	// Set polygon mode.
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
@@ -318,7 +327,7 @@ int main(int argc, char** argv)
 	// Register reshape routine.
 	glutReshapeFunc(resize);
 
-	setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom");
+	setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
 
 	// Begin processing.
 	glutMainLoop();
