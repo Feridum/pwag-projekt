@@ -19,7 +19,11 @@ static int tcsShaderHandle; // obiekt shadera geometrii
 static int esShaderHandle; // obiekt shadera geometrii
 
 
+
+GLuint* terrainText = new GLuint[2];
+
 unsigned int texture1;
+unsigned int texture2;
 
 GLuint vbo_id[1];
 GLfloat xyz[20 * 3][3] = { 0 };
@@ -77,13 +81,9 @@ static GLfloat vdata[6][5] = {
 };
 
 
-void terrain() {
-	glGenBuffers(1, vbo_id);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata)	, vdata, GL_STATIC_DRAW);
-
-	glGenTextures(1, &texture1);
-	glBindTexture(GL_TEXTURE_2D, texture1);
+void loadTerrain(GLuint texture, const char* textureFile) {
+	
+	glBindTexture(GL_TEXTURE_2D, texture);
 	// set the texture wrapping/filtering options (on the currently bound texture object)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -91,7 +91,7 @@ void terrain() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// load and generate the texture
 	int width, height, nrChannels;
-	unsigned char* data = stbi_load("wall.jpg", &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load(textureFile, &width, &height, &nrChannels, 0);
 	if (data)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -104,6 +104,17 @@ void terrain() {
 	stbi_image_free(data);
 }
 
+
+void terrain() {
+	glGenBuffers(1, vbo_id);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata)	, vdata, GL_STATIC_DRAW);
+
+	glGenTextures(2, terrainText);
+	loadTerrain(terrainText[0], "soil.jpg");
+	loadTerrain(terrainText[1], "grass.jpg");
+}
+
 void drawTerrain() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
@@ -114,12 +125,31 @@ void drawTerrain() {
 	glEnableVertexAttribArray(1);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture1);
+	glEnable(GL_TEXTURE_2D);
+	glUniform1i(glGetUniformLocation(programHandle, "texture1"), 0);
+	glBindTexture(GL_TEXTURE_2D, terrainText[0]);
+
+	glActiveTexture(GL_TEXTURE1);
+	glEnable(GL_TEXTURE_2D);
+	glUniform1i(glGetUniformLocation(programHandle, "texture2"), 1);
+	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
+	
+	
+	
 
 	glDrawArrays(GL_PATCHES, 0, 6);
 
+
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_TEXTURE_2D);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_TEXTURE_2D);
 
 }
 
@@ -191,8 +221,6 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 		glGetInfoLogARB(programHandle, maxInfoLogSize, NULL, infoLog);
 		std::cout << infoLog;
 	}
-
-	glUniform1i(glGetUniformLocation(programHandle, "texture1"), 0);
 }
 
 // Drawing (display) routine.
@@ -206,7 +234,7 @@ void drawScene(void)
 	glColor3f(0.0, 0.0, 0.0);
 	//glFrontFace(GL_CW);
 	// Set polygon mode.
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
@@ -245,7 +273,7 @@ void resize(int w, int h)
 
 	// Specify the orthographic (or perpendicular) projection, 
 	// i.e., define the viewing box.
-	gluPerspective(30, w / h, 0.1, 1000);
+	gluPerspective(-80, w / h, 0.1, 1000);
 
 	//
 	// glFrustum(-10.0, 10.0, -10.0, 10.0, 0.0, 200.0);

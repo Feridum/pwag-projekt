@@ -15,6 +15,12 @@ vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)
 void main(){
 	TexGeoCoord_FS_in = interpolate2D(TexGeoCoord_ES_in[0], TexGeoCoord_ES_in[1], TexGeoCoord_ES_in[2]);
 
-	gl_Position=(gl_TessCoord.x*gl_in[0].gl_Position+gl_TessCoord.y*gl_in[1].gl_Position+gl_TessCoord.z*gl_in[2].gl_Position);
+	vec4 oPosY = gl_TessCoord.y*gl_in[1].gl_Position;
+	vec4 posY = sin(oPosY)*2;
+
+	vec4 oPosZ = gl_TessCoord.z*gl_in[2].gl_Position;
+	vec4 posZ = oPosZ;
+
+	gl_Position=(gl_TessCoord.x*gl_in[0].gl_Position+posY+posZ);
 }
 
