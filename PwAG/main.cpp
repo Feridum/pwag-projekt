@@ -5,6 +5,7 @@
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/glut.h"
 #include "GL/glext.h"
+#include "GL/gl.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -47,6 +48,7 @@ PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv = NULL;
 PFNGLGENBUFFERSPROC glGenBuffers = NULL;
 PFNGLBINDBUFFERPROC glBindBuffer = NULL;
 PFNGLBUFFERDATAPROC glBufferData = NULL;
+PFNGLBUFFERSUBDATAPROC glBufferSubData = NULL;
 PFNGLMAPBUFFERPROC glMapBuffer = NULL;
 PFNGLUNMAPBUFFERPROC glUnmapBuffer = NULL;
 PFNGLDELETEBUFFERSPROC glDeleteBuffers = NULL;
@@ -73,13 +75,31 @@ char* readShader(const char* aShaderFile)
 	return content;
 }
 
+//To jest do glLookAt
+GLdouble eyex = 0;
+GLdouble eyey = 0;
+GLdouble eyez = 3;
+
+GLdouble centerx = 0;
+GLdouble centery = 0;
+GLdouble centerz = -100;
+
+
+//Tutaj próboowa³em zrobiæ ruch kamery za pomoc¹ przesuwania miejsca renderowania <-----------
+GLfloat LGx = -0.5;
+GLfloat LGy = 0.5;
+GLfloat LDx = -0.5;
+GLfloat LDy = 0.0;
+GLfloat PGx = 0.5;
+GLfloat PGy = 0.5;
+GLfloat PDx = 0.5;
+GLfloat PDy = 0.0;
 GLfloat Z = 0;
 
-static GLfloat vdata[6][5] = { 
-	{-0.5, Z, 0.0, 1.0, 1.0}, {-0.5, Z, 0.5, 1.0, 0.0 }, {0.5, Z, 0.5, 0.0, 0.0},
-	{0.5, Z, 0.5, 1.0, 1.0}, {0.5, Z, 0.0, 1.0, 0.0}, {-0.5, Z, 0.0, 0.0}
+static GLfloat vdata[6][5] = {
+	{LDx, Z, LDy, 1.0, 1.0}, {LGx, Z, LGy, 1.0, 0.0 }, {PGx, Z, PGy, 0.0, 0.0},
+	{PGx, Z, PGy, 1.0, 1.0}, {PDx, Z, PDy, 1.0, 0.0}, {LDx, Z, LDy, 0.0, 1.0}
 };
-
 
 void loadTerrain(GLuint texture, const char* textureFile) {
 	
@@ -226,7 +246,6 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 // Drawing (display) routine.
 void drawScene(void)
 {
-
 	// Clear screen to background color.
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -235,14 +254,19 @@ void drawScene(void)
 	//glFrontFace(GL_CW);
 	// Set polygon mode.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
 
 	glUseProgram(programHandle);
 
-	drawTerrain();
+	//To powinno zmieniæ wartoœci w buforze na nowe punkty <--------
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
+	//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vdata), vdata);
 
+	glLoadIdentity();
+	gluLookAt(eyex, eyey, eyez, centerx, centery, centerz, 0, 1, 0); //powinno zmieniæ po³o¿enie kamery <-----------------
+
+	drawTerrain();
+	
 	// Flush created objects to the screen, i.e., force rendering.
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -275,13 +299,13 @@ void resize(int w, int h)
 	// i.e., define the viewing box.
 	gluPerspective(-80, w / h, 0.1, 1000);
 
-	//
-	// glFrustum(-10.0, 10.0, -10.0, 10.0, 0.0, 200.0);
+	//glFrustum(-10.0, 10.0, -10.0, 10.0, 0.0, 200.0);
 	// Set matrix mode to modelview.
 	glMatrixMode(GL_MODELVIEW);
 
 	// Clear current modelview matrix to identity.
 	glLoadIdentity();
+	drawScene();
 }
 
 // sprawdzenie i przygotowanie obslugi wybranych rozszerzen
@@ -313,6 +337,7 @@ void extensionSetup()
 		glGenBuffers = (PFNGLGENBUFFERSPROC)wglGetProcAddress("glGenBuffers");
 		glBindBuffer = (PFNGLBINDBUFFERPROC)wglGetProcAddress("glBindBuffer");
 		glBufferData = (PFNGLBUFFERDATAPROC)wglGetProcAddress("glBufferData");
+		glBufferSubData = (PFNGLBUFFERSUBDATAPROC)wglGetProcAddress("glBufferSubData");
 		glMapBuffer = (PFNGLMAPBUFFERPROC)wglGetProcAddress("glMapBuffer");
 		glUnmapBuffer = (PFNGLUNMAPBUFFERPROC)wglGetProcAddress("glUnmapBuffer");
 		glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)wglGetProcAddress("glDeleteBuffers");
@@ -324,6 +349,50 @@ void extensionSetup()
 		glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
 	}
 
+}
+
+void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
+{
+	switch (key)
+	{
+		// kursor w lewo
+	case GLUT_KEY_LEFT:
+		/*LGx -= 0.1;
+		LDx -= 0.1;
+		PGx -= 0.1;
+		PDx -= 0.1;*/
+		eyex += 0.1;
+		break;
+
+		// kursor w górê
+	case GLUT_KEY_UP:
+		/*LGy -= 0.1;
+		LDy -= 0.1;
+		PGy -= 0.1;
+		PDy -= 0.1;*/
+		eyey -= 0.1;
+		break;
+
+		// kursor w prawo
+	case GLUT_KEY_RIGHT:
+		/*LGx += 0.1;
+		LDx += 0.1;
+		PGx += 0.1;
+		PDx += 0.1;*/
+		eyex -= 0.1;
+		break;
+
+		// kursor w dó³
+	case GLUT_KEY_DOWN:
+		/*LGy += 0.1;
+		LDy += 0.1;
+		PGy += 0.1;
+		PDy += 0.1;*/
+		eyey += 0.1;
+		break;
+	}
+
+	resize(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
 }
 
 // Main routine: defines window properties, creates window,
@@ -354,6 +423,7 @@ int main(int argc, char** argv)
 	glutDisplayFunc(drawScene);
 	// Register reshape routine.
 	glutReshapeFunc(resize);
+	glutSpecialFunc(SpecialKeys);
 
 	setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
 
