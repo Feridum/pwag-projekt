@@ -6,6 +6,9 @@
 #include "GL/glut.h"
 #include "GL/glext.h"
 #include "GL/gl.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -257,7 +260,8 @@ void drawScene(void)
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
 
 	glUseProgram(programHandle);
-
+	glm::mat4 view = glm::lookAt(glm::vec3(eyex, eyey, eyez), glm::vec3(centerx, centery, centerz), glm::vec3(0, 1, 0));
+	glUniformMatrix4fv(7, 1, GL_FALSE, glm::value_ptr(view));
 	//To powinno zmieniæ wartoœci w buforze na nowe punkty <--------
 	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
 	//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vdata), vdata);
@@ -361,7 +365,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDx -= 0.1;
 		PGx -= 0.1;
 		PDx -= 0.1;*/
-		eyex += 0.1;
+		eyex += 0.01;
 		break;
 
 		// kursor w górê
@@ -370,7 +374,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDy -= 0.1;
 		PGy -= 0.1;
 		PDy -= 0.1;*/
-		eyey -= 0.1;
+		eyey -= 0.01;
 		break;
 
 		// kursor w prawo
@@ -379,7 +383,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDx += 0.1;
 		PGx += 0.1;
 		PDx += 0.1;*/
-		eyex -= 0.1;
+		eyex -= 0.01;
 		break;
 
 		// kursor w dó³
@@ -388,7 +392,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDy += 0.1;
 		PGy += 0.1;
 		PDy += 0.1;*/
-		eyey += 0.1;
+		eyey += 0.01;
 		break;
 	}
 
