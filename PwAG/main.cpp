@@ -83,27 +83,21 @@ char* readShader(const char* aShaderFile)
 //To jest do glLookAt
 GLdouble eyex = 0;
 GLdouble eyey = 0;
-GLdouble eyez = 3;
+GLdouble eyez = 0;
 
 GLdouble centerx = 0;
-GLdouble centery = 0;
-GLdouble centerz = -100;
+GLdouble centery = 0.25;
+GLdouble centerz = 100;
 
+glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
+glm::vec3 cameraTarget = glm::vec3(centerx, centery, centerz);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-//Tutaj próboowa³em zrobiæ ruch kamery za pomoc¹ przesuwania miejsca renderowania <-----------
-GLfloat LGx = -0.5;
-GLfloat LGy = 0.5;
-GLfloat LDx = -0.5;
-GLfloat LDy = 0.0;
-GLfloat PGx = 0.5;
-GLfloat PGy = 0.5;
-GLfloat PDx = 0.5;
-GLfloat PDy = 0.0;
-GLfloat Z = 0;
+GLfloat Z = 0.1;
 
 static GLfloat vdata[6][5] = {
-	{-0.5, Z, 0.0, 1.0, 1.0}, {-0.5, Z, 0.5, 1.0, 0.0 }, {0.5, Z, 0.5, 0.0, 0.0},
-	{0.5, Z, 0.5, 1.0, 1.0}, {0.5, Z, 0.0, 1.0, 0.0}, {-0.5, Z, 0.0, 0.0}
+	{-0.5, 0.0, Z, 1.0, 1.0}, {-0.5, 0.5, Z, 1.0, 0.0 }, {0.5, 0.5, Z, 0.0, 0.0},
+	{0.5, 0.5, Z, 1.0, 1.0}, {0.5, 0.0, Z, 1.0, 0.0}, {-0.5, 0.0, Z, 0.0}
 };
 
 void loadTerrain(GLuint texture, const char* textureFile) {
@@ -264,14 +258,10 @@ void drawScene(void)
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
 
 	glUseProgram(programHandle);
-	glm::mat4 view = glm::lookAt(glm::vec3(eyex, eyey, eyez), glm::vec3(centerx, centery, centerz), glm::vec3(0, 1, 0));
+	cameraPos = glm::vec3(eyex, eyey, eyez);
+	cameraTarget = glm::vec3(centerx, centery, centerz);
+	glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
 	glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(view));
-	//To powinno zmieniæ wartoœci w buforze na nowe punkty <--------
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
-	//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vdata), vdata);
-
-/*	glLoadIdentity();
-	gluLookAt(eyex, eyey, eyez, centerx, centery, centerz, 0, 1, 0); *///powinno zmieniæ po³o¿enie kamery <-----------------
 
 	drawTerrain();
 	
@@ -359,8 +349,28 @@ void extensionSetup()
 
 }
 
+void Keyboard(unsigned char key, int x, int y)
+{
+	if (key == 'f') {
+		centery += 1;
+	}
+	else if (key == 'v') {
+		centery -= 1;
+	}
+	if (key == 'w') {
+		eyez -= 0.05;
+	}
+	else if (key == 's') {
+		eyez += 0.05;
+	}
+
+	// odrysowanie okna
+	resize(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
+}
+
 void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 {
+	GLfloat cameraSpeed = 0.1;
 	switch (key)
 	{
 		// kursor w lewo
@@ -369,7 +379,8 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDx -= 0.1;
 		PGx -= 0.1;
 		PDx -= 0.1;*/
-		eyex += 0.01;
+		eyex -= cameraSpeed;
+		centerx -= cameraSpeed;
 		break;
 
 		// kursor w górê
@@ -378,7 +389,8 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDy -= 0.1;
 		PGy -= 0.1;
 		PDy -= 0.1;*/
-		eyey -= 0.01;
+		eyey += cameraSpeed;
+		centery += cameraSpeed;
 		break;
 
 		// kursor w prawo
@@ -387,7 +399,8 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDx += 0.1;
 		PGx += 0.1;
 		PDx += 0.1;*/
-		eyex -= 0.01;
+		eyex += cameraSpeed;
+		centerx += cameraSpeed;
 		break;
 
 		// kursor w dó³
@@ -396,7 +409,8 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDy += 0.1;
 		PGy += 0.1;
 		PDy += 0.1;*/
-		eyey += 0.01;
+		eyey -= cameraSpeed;
+		centery -= cameraSpeed;
 		break;
 	}
 
@@ -432,6 +446,7 @@ int main(int argc, char** argv)
 	// Register reshape routine.
 	glutReshapeFunc(resize);
 	glutSpecialFunc(SpecialKeys);
+	glutKeyboardFunc(Keyboard);
 
 	setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
 

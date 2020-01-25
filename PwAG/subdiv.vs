@@ -11,8 +11,8 @@ out vec3 WorldPos_CS_in;
 
 void main()
 {
-  //gl_Position = view_matrix * vec4(vPosition.x, vPosition.z, vPosition.y, 1.0);
-  gl_Position = vec4(vPosition.x, vPosition.z, vPosition.y, 1.0);
+  //gl_Position = view_matrix * vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
+  gl_Position = vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
   WorldPos_CS_in = vPosition;
 
   TexGeoCoord_CS_in = texPosition;
