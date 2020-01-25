@@ -32,6 +32,8 @@ unsigned int texture2;
 GLuint vbo_id[1];
 GLfloat xyz[20 * 3][3] = { 0 };
 
+static GLint viewMatrix;
+
 //wskaüniki funkcji
 PFNGLCREATEPROGRAMPROC glCreateProgram = NULL;
 PFNGLCREATESHADERPROC glCreateShader = NULL;
@@ -100,8 +102,8 @@ GLfloat PDy = 0.0;
 GLfloat Z = 0;
 
 static GLfloat vdata[6][5] = {
-	{LDx, Z, LDy, 1.0, 1.0}, {LGx, Z, LGy, 1.0, 0.0 }, {PGx, Z, PGy, 0.0, 0.0},
-	{PGx, Z, PGy, 1.0, 1.0}, {PDx, Z, PDy, 1.0, 0.0}, {LDx, Z, LDy, 0.0, 1.0}
+	{-0.5, Z, 0.0, 1.0, 1.0}, {-0.5, Z, 0.5, 1.0, 0.0 }, {0.5, Z, 0.5, 0.0, 0.0},
+	{0.5, Z, 0.5, 1.0, 1.0}, {0.5, Z, 0.0, 1.0, 0.0}, {-0.5, Z, 0.0, 0.0}
 };
 
 void loadTerrain(GLuint texture, const char* textureFile) {
@@ -244,6 +246,8 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 		glGetInfoLogARB(programHandle, maxInfoLogSize, NULL, infoLog);
 		std::cout << infoLog;
 	}
+
+	viewMatrix = glGetUniformLocation(programHandle, "view_matrix");
 }
 
 // Drawing (display) routine.
@@ -261,13 +265,13 @@ void drawScene(void)
 
 	glUseProgram(programHandle);
 	glm::mat4 view = glm::lookAt(glm::vec3(eyex, eyey, eyez), glm::vec3(centerx, centery, centerz), glm::vec3(0, 1, 0));
-	glUniformMatrix4fv(7, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(view));
 	//To powinno zmieniÊ wartoúci w buforze na nowe punkty <--------
 	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
 	//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vdata), vdata);
 
-	glLoadIdentity();
-	gluLookAt(eyex, eyey, eyez, centerx, centery, centerz, 0, 1, 0); //powinno zmieniÊ po≥oøenie kamery <-----------------
+/*	glLoadIdentity();
+	gluLookAt(eyex, eyey, eyez, centerx, centery, centerz, 0, 1, 0); *///powinno zmieniÊ po≥oøenie kamery <-----------------
 
 	drawTerrain();
 	
