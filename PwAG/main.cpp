@@ -11,6 +11,9 @@
 #include "glm/gtc/type_ptr.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <math.h>  
+
+#define PI 3.14159265
 
 using namespace std;
 
@@ -85,8 +88,8 @@ GLdouble eyex = 0;
 GLdouble eyey = 0;
 GLdouble eyez = 0;
 
-GLdouble centerx = 0;
-GLdouble centery = 0.25;
+GLdouble centerx = 6;
+GLdouble centery = 77;
 GLdouble centerz = 100;
 
 glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
@@ -96,8 +99,8 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 GLfloat Z = 0.1;
 
 static GLfloat vdata[6][5] = {
-	{-0.5, 0.0, Z, 1.0, 1.0}, {-0.5, 0.5, Z, 1.0, 0.0 }, {0.5, 0.5, Z, 0.0, 0.0},
-	{0.5, 0.5, Z, 1.0, 1.0}, {0.5, 0.0, Z, 1.0, 0.0}, {-0.5, 0.0, Z, 0.0}
+	{-0.5, Z, 0.0, 1.0, 1.0}, {-0.5, Z, 0.5, 1.0, 0.0 }, {0.5, Z, 0.5, 0.0, 0.0},
+	{0.5, Z, 0.5, 1.0, 1.0}, {0.5, Z, 0.0, 1.0, 0.0}, {-0.5, Z, 0.0, 0.0}
 };
 
 void loadTerrain(GLuint texture, const char* textureFile) {
@@ -351,12 +354,6 @@ void extensionSetup()
 
 void Keyboard(unsigned char key, int x, int y)
 {
-	if (key == 'f') {
-		centery += 1;
-	}
-	else if (key == 'v') {
-		centery -= 1;
-	}
 	if (key == 'w') {
 		eyez -= 0.05;
 	}
@@ -370,7 +367,7 @@ void Keyboard(unsigned char key, int x, int y)
 
 void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 {
-	GLfloat cameraSpeed = 0.1;
+	GLfloat cameraSpeed = 1;
 	switch (key)
 	{
 		// kursor w lewo
@@ -379,7 +376,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDx -= 0.1;
 		PGx -= 0.1;
 		PDx -= 0.1;*/
-		eyex -= cameraSpeed;
+		//eyex -= cameraSpeed;
 		centerx -= cameraSpeed;
 		break;
 
@@ -389,7 +386,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDy -= 0.1;
 		PGy -= 0.1;
 		PDy -= 0.1;*/
-		eyey += cameraSpeed;
+		//eyey += cameraSpeed;
 		centery += cameraSpeed;
 		break;
 
@@ -399,7 +396,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDx += 0.1;
 		PGx += 0.1;
 		PDx += 0.1;*/
-		eyex += cameraSpeed;
+		//eyex += cameraSpeed;
 		centerx += cameraSpeed;
 		break;
 
@@ -409,7 +406,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		LDy += 0.1;
 		PGy += 0.1;
 		PDy += 0.1;*/
-		eyey -= cameraSpeed;
+		//eyey -= cameraSpeed;
 		centery -= cameraSpeed;
 		break;
 	}
