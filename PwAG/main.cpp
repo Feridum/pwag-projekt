@@ -275,7 +275,7 @@ void drawTerrain() {
 	std::vector<GLfloat> houseDataVec;
 
 	//przekazujemy jako osobn¹ zmienn¹ liczbê domków. Skoro ka¿dy domek to 7 float'ów, to w GPU bêdziemy mogli dzieki temu wiedzieæ ile zmiennych mamy odczytaæ z wektora
-	glUseProgram(vertexShaderHandle);
+	glUseProgram(programHandle);
 	glUniform1f(houseNumLocation, houseCounter);
 
 	
@@ -289,7 +289,7 @@ void drawTerrain() {
 	}
 
 	//przekazujemy wektor z danymi do tworzenia domków
-	glUseProgram(vertexShaderHandle);
+	glUseProgram(programHandle);
 	glUniform1fv(houseDataVecLocation, houseDataVec.size(), reinterpret_cast<GLfloat*>(houseDataVec.data()));
 	//=====================================================================================
 }
