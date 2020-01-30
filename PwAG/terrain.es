@@ -39,7 +39,7 @@ void main(){
 	//gl_Position = WorldPos_FS_in;
 
 	double wX = WorldPos_FS_in.x;
-	//double wY = sin((WorldPos_FS_in.x + WorldPos_FS_in.z)*2)*0.3;
+	//double wY = sin((WorldPos_FS_in.x + WorldPos_FS_in.z)*8)*0.1;
 	double wY = WorldPos_FS_in.y;
 	double wZ = WorldPos_FS_in.z;
 	gl_Position = vec4(wX, wY, wZ , 1.0) * view_matrix;

@@ -12,6 +12,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <math.h>  
+#include "Heightmap.hpp"
 
 #define PI 3.14159265
 
@@ -95,6 +96,9 @@ GLdouble centerz = 100;
 glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
 glm::vec3 cameraTarget = glm::vec3(centerx, centery, centerz);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+HillAlgorithmParameters hill = HillAlgorithmParameters(10, 10, 2, 1, 2, 0.5, 1);
+vector<vector<float>> heightmap = generateRandomHeightData(hill);
+
 
 GLfloat Z = 0.1;
 
@@ -418,6 +422,8 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 // registers callback routines and begins processing.
 int main(int argc, char** argv)
 {
+	//display(heightmap);
+
 	// Initialize GLUT.
 	glutInit(&argc, argv);
 
@@ -449,6 +455,7 @@ int main(int argc, char** argv)
 
 	// Begin processing.
 	glutMainLoop();
+
 
 	return 0;
 }
