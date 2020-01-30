@@ -93,15 +93,15 @@ GLdouble centerx = 6;
 GLdouble centery = 77;
 GLdouble centerz = 100;
 
-int heightMapHeight = 300;
-int heightMapWidth = 300;
+int heightMapHeight = 30;
+int heightMapWidth = 30;
 
 
 glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
 glm::vec3 cameraTarget = glm::vec3(centerx, centery, centerz);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-HillAlgorithmParameters hill = HillAlgorithmParameters(heightMapHeight, heightMapWidth, 2, 1, 2, 0.5, 1);
-vector<vector<float>> heightmap = generateRandomHeightData(hill);
+HillAlgorithmParameters hill = HillAlgorithmParameters(heightMapHeight, heightMapWidth, 5, 1, 2, 0.5, 1);
+vector<vector<GLfloat>> heightmap = generateRandomHeightData(hill);
 
 
 GLfloat Z = 0.1;
@@ -151,7 +151,7 @@ void terrain() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, heightMapHeight, heightMapWidth, 0, GL_RGB, GL_UNSIGNED_BYTE, heightmap.data());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, heightMapHeight, heightMapWidth, 0, GL_DEPTH_COMPONENT, GL_FLOAT, heightmap.data());
 }
 
 void drawTerrain() {
