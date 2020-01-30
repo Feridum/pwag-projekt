@@ -93,15 +93,20 @@ GLdouble centerx = 6;
 GLdouble centery = 77;
 GLdouble centerz = 100;
 
-int heightMapHeight = 30;
-int heightMapWidth = 30;
-
+int heightMapHeight = 100;
+int heightMapWidth = 100;
+int numHills = 1;
+int hillRadiusMin = 1;
+int hillRadiusMax = 2;
+float hillMinHeight = 0.01;
+float hillMaxHeight = 0.1;
 
 glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
 glm::vec3 cameraTarget = glm::vec3(centerx, centery, centerz);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-HillAlgorithmParameters hill = HillAlgorithmParameters(heightMapHeight, heightMapWidth, 5, 1, 2, 0.5, 1);
-vector<vector<GLfloat>> heightmap = generateRandomHeightData(hill);
+HillAlgorithmParameters hill = HillAlgorithmParameters(heightMapHeight, heightMapWidth, numHills,
+										hillRadiusMin, hillRadiusMax, hillMinHeight, hillMaxHeight);
+vector<vector<float>> heightmap = generateRandomHeightData(hill);
 
 
 GLfloat Z = 0.1;
