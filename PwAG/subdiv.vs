@@ -2,19 +2,20 @@
 layout(location = 0) in vec3 vPosition;
 layout(location = 1) in vec2 texPosition;
 
-
-uniform mat4 view_matrix;
+uniform float houseNum;
+uniform vec1 houseDataVec;
 
 out vec2 TexGeoCoord_CS_in;
-out vec3 WorldPos_CS_in;
-
 
 void main()
 {
-  //gl_Position = view_matrix * vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
-  gl_Position = vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
-  WorldPos_CS_in = vPosition;
+  gl_Position = vec4(vPosition.x, vPosition.z, vPosition.y, 1.0);
 
-  TexGeoCoord_CS_in = texPosition;
+  if (houseNum != 0)
+  {
+    gl_Position.x += houseDataVec[0];
+  }
+
+  TexGeoCoord_CS_in = texPosition * (houseNum + houseDataVEc[0]);
 }
 
