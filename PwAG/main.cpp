@@ -28,7 +28,7 @@ static int esShaderHandle; // obiekt shadera geometrii
 
 
 
-GLuint* terrainText = new GLuint[2];
+GLuint* terrainText = new GLuint[3];
 
 unsigned int texture1;
 unsigned int texture2;
@@ -93,10 +93,14 @@ GLdouble centerx = 6;
 GLdouble centery = 77;
 GLdouble centerz = 100;
 
+int heightMapHeight = 300;
+int heightMapWidth = 300;
+
+
 glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
 glm::vec3 cameraTarget = glm::vec3(centerx, centery, centerz);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-HillAlgorithmParameters hill = HillAlgorithmParameters(10, 10, 2, 1, 2, 0.5, 1);
+HillAlgorithmParameters hill = HillAlgorithmParameters(heightMapHeight, heightMapWidth, 2, 1, 2, 0.5, 1);
 vector<vector<float>> heightmap = generateRandomHeightData(hill);
 
 
@@ -136,9 +140,18 @@ void terrain() {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata)	, vdata, GL_STATIC_DRAW);
 
-	glGenTextures(2, terrainText);
+	glGenTextures(3, terrainText);
 	loadTerrain(terrainText[0], "soil.jpg");
 	loadTerrain(terrainText[1], "grass.jpg");
+
+	glBindTexture(GL_TEXTURE_2D, terrainText[2]);
+	// set the texture wrapping/filtering options (on the currently bound texture object)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, heightMapHeight, heightMapWidth, 0, GL_RGB, GL_UNSIGNED_BYTE, heightmap.data());
 }
 
 void drawTerrain() {
@@ -160,6 +173,11 @@ void drawTerrain() {
 	glUniform1i(glGetUniformLocation(programHandle, "texture2"), 1);
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 	
+
+	glActiveTexture(GL_TEXTURE2);
+	glEnable(GL_TEXTURE_2D);
+	glUniform1i(glGetUniformLocation(programHandle, "heightMap"), 2);
+	glBindTexture(GL_TEXTURE_2D, terrainText[2]);
 	
 	
 
