@@ -8,10 +8,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <vector>
+#include "glm/glm/glm.hpp"
+#include "glm/glm/gtc/type_ptr.hpp"
 
 
 using namespace std;
-
 
 static int programHandle; // obiekt programu
 static int vertexShaderHandle; // obiekt shadera wierzcho³ków
@@ -54,7 +55,7 @@ GLuint* terrainText = new GLuint[2];
 	Znane jest po³o¿enie punktów A i B (A.x, A.y, A.z, B.x, B.y. B.z). Obliczmy wartoœæ X i Y jako odleg³oœci odpowiadaj¹cych wspó³rzêdnych punktów A i B:
 	float X = A.x-B.x;
 	float Y = A.y-B.y;
-	Dlaczego nie wartoœci bezwzlêdne? Bo nie s¹ potrzebne, wartoœci X i Y mog¹ byæ ujemne, co z punktu geometrii nie ma sensu (sujemne d³ugoœci), ale nas obchodzi orientacja punktów
+	Dlaczego nie wartoœci bezwzlêdne? Bo nie s¹ potrzebne, wartoœci X i Y mog¹ byæ ujemne, co z punktu geometrii nie ma sensu (ujemne d³ugoœci), ale nas obchodzi orientacja punktów
 	wzglêdem siebie. Dziêki temu zawsze mamy: B.x = A.x + X; B.y = A.y + Y;
 	Na tej podstawie mo¿emy wyznaczyæ po³o¿enie punktu B` -> B`.x = A.x - X; B`.y = A.y - Y;
 	Teraz aby otrzymaæ prostok¹t powinno siê dobraæ wierzcho³ki C i C`, aby odcinki |BC| i |B`C| by³y do siebie prostopad³e. Prawdê mówi¹c pocz¹tkowo myœla³em, czy nie wykorzystaæ
@@ -127,13 +128,22 @@ GLuint* terrainText = new GLuint[2];
 
 
 #define houseCounter  1
+#define maxHouseCounter 10
 //[7] -> [P1.x, P1.y, P1.z, P2.x, P2.y, P2.z, wallH] 
-static float houses[houseCounter][7] = {
+float houses[houseCounter][7] = {
 	{ 0.0f, 0.0f, 0.0f, 5.0f, 10.0f, 0.0f, 5.0f }
 };
 
 unsigned int texture1;
 unsigned int texture2;
+
+static GLint houseNumLocation;
+static GLint houseFirstPartcLocation;
+static GLint houseSecoundPartcLocation;
+static GLint houseThirdPartcLocation;
+static GLint houseFourthPartcLocation;
+static GLint houseFifthPartcLocation;
+//static GLfloat test[7] = { 1,2,3,4,5,6,7 };
 
 GLuint vbo_id[2];
 GLfloat xyz[20 * 3][3] = { 0 };
@@ -150,9 +160,16 @@ PFNGLPATCHPARAMETERIPROC	glPatchParameteri = NULL;
 PFNGLGETOBJECTPARAMETERIVARBPROC glGetObjectParameterivARB = NULL;
 PFNGLGETINFOLOGARBPROC glGetInfoLogARB = NULL;
 PFNGLGETUNIFORMLOCATIONPROC  glGetUniformLocation = NULL;
+
+PFNGLPROGRAMUNIFORM3FPROC glProgramUniform3f = NULL;
+
 PFNGLUNIFORM1FPROC glUniform1f = NULL;
 PFNGLUNIFORM1IPROC glUniform1i = NULL;
 PFNGLUNIFORM1FVPROC glUniform1fv = NULL;
+PFNGLUNIFORM3FPROC glUniform3f = NULL;
+PFNGLUNIFORM4FPROC glUniform4f = NULL;
+PFNGLUNIFORM3FVPROC glUniform3fv = NULL;
+PFNGLUNIFORM4FVPROC glUniform4fv = NULL;
 PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = NULL;
 PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv = NULL;
 PFNGLGENBUFFERSPROC glGenBuffers = NULL;
@@ -229,7 +246,7 @@ void terrain() {
 	loadTerrain(terrainText[1], "grass.jpg");
 }
 
-void drawTerrain() {
+void drawTerrain() {		//tutaj dzieje siê magia
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
@@ -263,35 +280,7 @@ void drawTerrain() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
 
-	//======================================================================================
-	//przekazywanie parametrów przez uniforma
 
-	GLint houseNumLocation = glGetUniformLocation(programHandle, "houseNum");
-	GLint houseDataVecLocation = glGetUniformLocation(programHandle, "houseDataVec");
-
-	//glUniform3fv
-
-	//inicjalizajca wektora, którym bêdziemy rpzekazywali dane
-	std::vector<GLfloat> houseDataVec;
-
-	//przekazujemy jako osobn¹ zmienn¹ liczbê domków. Skoro ka¿dy domek to 7 float'ów, to w GPU bêdziemy mogli dzieki temu wiedzieæ ile zmiennych mamy odczytaæ z wektora
-	glUseProgram(programHandle);
-	glUniform1f(houseNumLocation, houseCounter);
-
-	
-	//przekazywanie zmiennych do vectora
-	for (int i = 0; i < houseCounter; i++)
-	{
-		for (int j = 0; j < 7; j++)
-		{
-			houseDataVec.push_back(houses[i][j]);
-		}
-	}
-
-	//przekazujemy wektor z danymi do tworzenia domków
-	glUseProgram(programHandle);
-	glUniform1fv(houseDataVecLocation, houseDataVec.size(), reinterpret_cast<GLfloat*>(houseDataVec.data()));
-	//=====================================================================================
 }
 
 // incjalizacja shaderów
@@ -362,6 +351,95 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 		glGetInfoLogARB(programHandle, maxInfoLogSize, NULL, infoLog);
 		std::cout << infoLog;
 	}
+
+	//======================================================================================
+	//przekazywanie parametrów przez uniforma
+
+	houseNumLocation = glGetUniformLocation(programHandle, "houseNum");
+	houseFirstPartcLocation = glGetUniformLocation(programHandle, "houseFirstPart");
+	houseSecoundPartcLocation = glGetUniformLocation(programHandle, "houseSecoundPart");
+
+	//glUniform3fv
+
+	//inicjalizajca wektora, którym bêdziemy przekazywali dane
+	std::vector<GLfloat> houseDataVec;
+	//glm::vec3 firstPart;// [houseCounter] ;
+	//glm::vec4 secoundPart;// [houseCounter] ;
+	
+	//GLfloat* test = new GLfloat [7];
+	//test[0] = 10;
+	//test[6] = 5;
+
+
+	//przekazujemy jako osobn¹ zmienn¹ liczbê domków. Skoro ka¿dy domek to 7 float'ów, to w GPU bêdziemy mogli dzieki temu wiedzieæ ile zmiennych mamy odczytaæ z wektora
+	glUseProgram(programHandle);
+	glUniform1i(houseNumLocation, houseCounter);
+
+	//przekazywanie zmiennych do vectora
+	/*
+	for (int i = 0; i < houseCounter; i++)
+	{
+		for (int j = 0; j < 7; j++)
+		{
+			//houseDataVec.push_back(houses[i][j]);
+			//test[j + 7 * 1] = houses[i][j];
+			if (j < 3)
+			{
+				firstPart[j] = houses[i][j];
+			}
+			else
+			{
+				secoundPart[j-3] = houses[i][j];
+			}
+		}
+	}
+	*/
+	//glUseProgram(programHandle);
+	//houseNumLocation = glGetUniformLocation(programHandle, "houseNum");
+	//glUniform1f(houseNumLocation, houseCounter);
+	/*
+	GLfloat params[3];
+	params[0] = 2.0f;
+	params[1] = 1.0f;
+	params[2] = 1.0f;
+
+	GLint colorRampUniformLocation = glGetUniformLocation(programHandle, "params");
+	glUniform1fv(colorRampUniformLocation, 3, params);
+	*/
+
+	//float threshold[4] = { 0.5f, 0.25f };
+	//float threshold[2][4] = { {0.5f}, {0.25f} };
+
+	//glUniform4fv(glGetUniformLocation(programHandle, "t"), 2, threshold);
+
+	/*
+	GLfloat test[6];
+	for (int i = 0; i < 6; i++)
+	{
+		test[i] = i;
+	}
+
+	GLfloat test2[8];
+	for (int i = 0; i < 8; i++)
+	{
+		test2[i] = i;
+	}
+	glUniform3fv(houseFirstPartcLocation, 2, test);
+	glUniform4fv(houseSecoundPartcLocation, 2, test2);
+	*/
+	//houseFirstPartcLocation = glGetUniformLocation(programHandle, "houseFirstPart");
+	//glUniform3f(houseFirstPartcLocation, 7.0f, 5.0f, 4.0f);
+	//glUniform1fv(houseFirstPartcLocation,  7, test);
+	//glUniform4f(houseFirstPartcLocation, glm::value_ptr(secoundPart));
+
+	//przekazujemy wektor z danymi do tworzenia domków
+	//glUseProgram(programHandle);
+	//int i = houseDataVec[4];
+	//GLfloat *tmp = reinterpret_cast<GLfloat*>(&houseDataVec[0]);
+	//test[0] = 10;
+	//glUniform1fv(houseDataVecLocation, houseDataVec.size(), tmp);
+	//glUniform1fv(houseDataVecLocation, 7*houseCounter, test);
+	//=====================================================================================
 }
 
 // Drawing (display) routine.
@@ -382,7 +460,8 @@ void drawScene(void)
 
 	glUseProgram(programHandle);
 
-	drawTerrain();
+	//funkcje, które bêd¹ cos wyœwietla³y
+	drawTerrain();	
 
 	// Flush created objects to the screen, i.e., force rendering.
 	glutSwapBuffers();
@@ -486,13 +565,13 @@ int main(int argc, char** argv)
 	// Create OpenGL window with title.
 	glutCreateWindow("cw6 - Ekspozja");
 
-	// Initialize.
+	// Initialize.		//tutaj przygotowujemy wszystko co siê póŸniej rpzyda: rpzekazujemy zmienne dalej, etc.
 	setup();
 	extensionSetup();
 	terrain();
 
 	// Register display routine.
-	glutDisplayFunc(drawScene);
+	glutDisplayFunc(drawScene);		//tutaj faktycznie coœ rysujemy
 	// Register reshape routine.
 	glutReshapeFunc(resize);
 

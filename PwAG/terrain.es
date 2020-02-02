@@ -3,8 +3,10 @@
 layout(triangles, equal_spacing, ccw) in;
 
 in vec2 TexGeoCoord_ES_in[];
+in vec3 HouseCoord_ES_in[];
 
 out vec2 TexGeoCoord_FS_in;
+out vec3 HouseCoord_FS_in[];
 
 
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)
