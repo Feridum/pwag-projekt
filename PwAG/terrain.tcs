@@ -8,7 +8,7 @@ in vec3 HouseCoord_CS_in_F[gl_MaxPatchVertices];
 in vec4 HouseCoord_CS_in_S[gl_MaxPatchVertices];
 
 out vec2 TexGeoCoord_ES_in[];
-out vec3 HouseCoord_ES_in[];
+out vec4 HouseCoord_ES_in[];
 
 uniform int houseNum;
 
@@ -24,8 +24,9 @@ void main()
         gl_TessLevelOuter[2] = 10.0;
     }
 
-    gl_out[gl_InvocationID + (10*houseNum)].gl_Position = gl_in[gl_InvocationID].gl_Position;
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;// + (10*houseNum)].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
+    /*
     float houseX, houseY, houseWallH;
     vec4 posA, posB, posBp, posC, posCp, posD, posDp, posE, posEp, posF, posFp;
 
@@ -63,5 +64,6 @@ void main()
         gl_out[gl_InvocationID + (10*i) + 8].gl_Position = posF;
         gl_out[gl_InvocationID + (10*i) + 9].gl_Position = posFp;
     }
+    */
 
 }
