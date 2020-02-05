@@ -223,15 +223,28 @@ static GLfloat vdata[6][5] = {
 	Funkcja, która przypisuje wartoœci punktu we wskazane miejsce w tablicy domków. Bez tego funkcja createHouses() by³aby BARDZO d³uga...
 	Jako pola 4 i 5 ([][3], [][4]) wpisuje wartoœci losowe 0, albo 1 (dzieki temu tekstura siê jakoœ wczyta - to do testów)
 */
-void copyPoint(int i, int j, glm::vec3 Point)
+void copyPoint(int i, int j, int t, glm::vec3 Point)
 {
 	srand(time(NULL));
 
 	vhouse[i * 42 + j][0] = Point.x;
 	vhouse[i * 42 + j][1] = Point.y;
 	vhouse[i * 42 + j][2] = Point.z;
-	vhouse[i * 42 + j][3] = (float)(rand() % 1);
-	vhouse[i * 42 + j][4] = (float)(rand() % 1);
+	if (t == 0)
+	{
+		vhouse[i * 42 + j][3] = 1.0;
+		vhouse[i * 42 + j][4] = 1.0;
+	}
+	else if (t == 1)
+	{
+		vhouse[i * 42 + j][3] = 1.0;
+		vhouse[i * 42 + j][4] = 0.0;
+	}
+	else
+	{
+		vhouse[i * 42 + j][3] = 0.0;
+		vhouse[i * 42 + j][4] = 0.0;
+	}
 }
 
 /*
@@ -377,61 +390,61 @@ void createHouses()
 			*/
 
 
-			copyPoint(i, 0, posBp);
-			copyPoint(i, 1, posE);
-			copyPoint(i, 2, posC);
+			copyPoint(i, 0, 0, posBp);
+			copyPoint(i, 1, 1, posE);
+			copyPoint(i, 2, 2, posC);
 
-			copyPoint(i, 3, posDp);
-			copyPoint(i, 4, posE);
-			copyPoint(i, 5, posBp);
+			copyPoint(i, 3, 0, posDp);
+			copyPoint(i, 4, 1, posE);
+			copyPoint(i, 5, 2, posBp);
 
-			copyPoint(i, 6, posC);
-			copyPoint(i, 7, posE);
-			copyPoint(i, 8, posB);
+			copyPoint(i, 6, 0, posC);
+			copyPoint(i, 7, 1, posE);
+			copyPoint(i, 8, 2, posB);
 
-			copyPoint(i, 9, posE);
-			copyPoint(i, 10, posD);
-			copyPoint(i, 11, posB);
+			copyPoint(i, 9, 0, posE);
+			copyPoint(i, 10, 1, posD);
+			copyPoint(i, 11, 2, posB);
 
-			copyPoint(i, 12, posBp);
-			copyPoint(i, 13, posDp);
-			copyPoint(i, 14, posCp);
+			copyPoint(i, 12, 0, posBp);
+			copyPoint(i, 13, 1, posDp);
+			copyPoint(i, 14, 2, posCp);
 
-			copyPoint(i, 15, posCp);
-			copyPoint(i, 16, posDp);
-			copyPoint(i, 17, posEp);
+			copyPoint(i, 15, 0, posCp);
+			copyPoint(i, 16, 1, posDp);
+			copyPoint(i, 17, 2, posEp);
 
-			copyPoint(i, 18, posEp);
-			copyPoint(i, 19, posD);
-			copyPoint(i, 20, posCp);
+			copyPoint(i, 18, 0, posEp);
+			copyPoint(i, 19, 1, posD);
+			copyPoint(i, 20, 2, posCp);
 
-			copyPoint(i, 21, posB);
-			copyPoint(i, 22, posCp);
-			copyPoint(i, 23, posD);
+			copyPoint(i, 21, 0, posB);
+			copyPoint(i, 22, 1, posCp);
+			copyPoint(i, 23, 2, posD);
 
-			copyPoint(i, 24, posE);
-			copyPoint(i, 25, posF);
-			copyPoint(i, 26, posD);
+			copyPoint(i, 24, 0, posE);
+			copyPoint(i, 25, 1, posF);
+			copyPoint(i, 26, 2, posD);
 
-			copyPoint(i, 27, posBp);
-			copyPoint(i, 28, posFp);
-			copyPoint(i, 29, posEp);
+			copyPoint(i, 27, 0, posBp);
+			copyPoint(i, 28, 1, posFp);
+			copyPoint(i, 29, 2, posEp);
 
-			copyPoint(i, 30, posDp);
-			copyPoint(i, 31, posFp);
-			copyPoint(i, 32, posE);
+			copyPoint(i, 30, 0 ,posDp);
+			copyPoint(i, 31, 1, posFp);
+			copyPoint(i, 32, 2, posE);
 
-			copyPoint(i, 33, posFp);
-			copyPoint(i, 34, posF);
-			copyPoint(i, 35, posE);
+			copyPoint(i, 33, 0, posFp);
+			copyPoint(i, 34, 1, posF);
+			copyPoint(i, 35, 2, posE);
 
-			copyPoint(i, 36, posF);
-			copyPoint(i, 37, posFp);
-			copyPoint(i, 38, posEp);
+			copyPoint(i, 36, 0, posF);
+			copyPoint(i, 37, 1, posFp);
+			copyPoint(i, 38, 2, posEp);
 
-			copyPoint(i, 39, posEp);
-			copyPoint(i, 40, posD);
-			copyPoint(i, 41, posF);
+			copyPoint(i, 39, 0, posEp);
+			copyPoint(i, 40, 1, posD);
+			copyPoint(i, 41, 2, posF);
 		}
 	}
 	//skoñczono generowaæ domki
