@@ -126,6 +126,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="house.es" />
+    <None Include="house.fs" />
+    <None Include="house.tcs" />
+    <None Include="house.vs" />
     <None Include="subdiv.fs" />
     <None Include="subdiv.vs" />
     <None Include="subdiv_p.geom" />

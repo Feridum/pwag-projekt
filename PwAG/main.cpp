@@ -12,8 +12,19 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <math.h>  
+#include <time.h>     
+#include <algorithm>
 
 #define PI 3.14159265
+#define MAX_HOUSE_COUNTER		10
+#define HOUSE_QUANTITY			3
+#define HOUSE_COUNTER			min(HOUSE_QUANTITY,MAX_HOUSE_COUNTER)
+#define MIN_X					-1
+#define MAX_X					1
+#define MIN_Y					-1
+#define MAX_Y					1
+#define PROPORTION				0.2
+#define WALL_LENGTH				(abs(MIN_X) + abs(MAX_X))*PROPORTION*0.5
 
 using namespace std;
 
@@ -27,12 +38,13 @@ static int esShaderHandle; // obiekt shadera geometrii
 
 
 
-GLuint* terrainText = new GLuint[2];
+GLuint* terrainText = new GLuint[4];
 
 unsigned int texture1;
 unsigned int texture2;
+float wallHeight = 0;
 
-GLuint vbo_id[1];
+GLuint vbo_id[2];
 GLfloat xyz[20 * 3][3] = { 0 };
 
 static GLint viewMatrix;
@@ -98,10 +110,246 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 GLfloat Z = 0.1;
 
+static GLfloat vhouse[HOUSE_COUNTER * 42][5] = { 0 };
+
 static GLfloat vdata[6][5] = {
 	{-0.5, Z, 0.0, 1.0, 1.0}, {-0.5, Z, 0.5, 1.0, 0.0 }, {0.5, Z, 0.5, 0.0, 0.0},
 	{0.5, Z, 0.5, 1.0, 1.0}, {0.5, Z, 0.0, 1.0, 0.0}, {-0.5, Z, 0.0, 0.0}
 };
+
+/*
+	Funkcja, która przypisuje wartoœci punktu we wskazane miejsce w tablicy domków. Bez tego funkcja createHouses() by³aby BARDZO d³uga...
+	Jako pola 4 i 5 ([][3], [][4]) wpisuje wartoœci losowe 0, albo 1 (dzieki temu tekstura siê jakoœ wczyta - to do testów)
+*/
+void copyPoint(int i, int j, int t, glm::vec3 Point)
+{
+	srand(time(NULL));
+	vhouse[i * 42 + j][0] = Point.x;
+	vhouse[i * 42 + j][1] = Point.y;
+	vhouse[i * 42 + j][2] = Point.z;
+	if (t == 0)
+	{
+		vhouse[i * 42 + j][3] = 1.0;
+		vhouse[i * 42 + j][4] = 1.0;
+	}
+	else if (t == 1)
+	{
+		vhouse[i * 42 + j][3] = 1.0;
+		vhouse[i * 42 + j][4] = 0.0;
+	}
+	else if (t == 2)
+	{
+		vhouse[i * 42 + j][3] = 0.0;
+		vhouse[i * 42 + j][4] = 0.0;
+	}
+	else
+	{
+		vhouse[i * 42 + j][3] = 0.0;
+		vhouse[i * 42 + j][4] = 1.0;
+	}
+}
+
+/*
+	Aby wygenerowaæ domki nale¿y przes³aæ pewn¹ iloœæ wierzcho³ków do potoku graficznego
+	Domek posiada 10 wierzcho³ków, które buduj¹ jego szkielet oraz jedynasty - punkt œrodkowy, potrzebny do okreœlenia po³o¿enia pozosta³ych wierzcho³ków
+	Jednak¿e œciany bêd¹ zbudowane z trójk¹tów, a trójk¹ty bêdziemy wykorzystywaæ przy renderowaniu. Z tego te¿ powodu wysy³amy:
+	(3+3)*6 + 3 + 3 = 42 wierzcho³ki na domek.
+
+	Potrzebne bêdzie wylosowanie 5 liczb (przy za³o¿eniu, ¿e domki bêd¹ le¿a³y na jednej wysokoœci): wartoœci x,y dla punktu centalnego - A, wartoœci x,y dla jednego wierzcho³ka podstawy - B oraz wartoœci wysokoœci œciany domku.
+*/
+void createHouses()
+{
+	//(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) -> liczba losowa typu float z zakresu 0-1
+	srand(time(NULL));
+	glm::vec3 posA, posB, posBp, posC, posCp, posD, posDp, posE, posEp, posF, posFp;
+	float houseX, houseY;
+
+	glm::vec3 posATab[HOUSE_COUNTER];
+	bool colide = false;
+	int failCounter = 0;
+
+	for (int i = 0; i < HOUSE_COUNTER; i++)
+	{
+		posATab[i].x = 0;
+		posATab[i].y = 0;
+		posATab[i].z = 0;
+	}
+
+	wallHeight = max((float)(WALL_LENGTH / 2.0), (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (WALL_LENGTH / 1.0))));
+
+
+
+	for (int i = 0; i < HOUSE_COUNTER; i++)
+	{
+		posA.x = MIN_X + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_X) + abs(MIN_X))));
+		posA.y = MIN_Y + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_Y) + abs(MIN_Y))));
+		posA.z = Z;
+
+		//je¿eli mamy ju¿ jakieœ punkty A, to musimy sprawdziæ, czy nie le¿¹ za blisko siebie - czy zbudowane na nich domki nie bêd¹ na siebie nachodziæ
+		if (posATab[0].x != 0 || posATab[0].y != 0 || posATab[0].z != 0)		//jeœli tak, to znaczy, ¿e mamy ju¿ jakieœ domki
+		{
+			colide = true;
+			failCounter = 0;
+			while (colide && failCounter < 30)
+			{
+				failCounter++;
+				colide = false;
+				for (int j = 0; j < HOUSE_COUNTER; j++)
+				{
+					if (posATab[j].x != 0 || posATab[j].y != 0 || posATab[j].z != 0)
+					{
+						if (pow(posATab[j].x - posA.x, 2.0) + pow(posATab[j].y - posA.y, 2.0) <= pow(WALL_LENGTH * 2, 2.0))
+						{
+							colide = true;
+							break;
+						}
+					}
+				}
+				if (colide == true)
+				{
+					posA.x = MIN_X + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_X) + abs(MIN_X))));
+					posA.y = MIN_Y + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_Y) + abs(MIN_Y))));
+					posA.z = Z;
+				}
+			}
+		}
+		if (colide == true)
+		{
+			std::cout << "\nUnable to create new house. Please change house number to smaller value or make villige plain larger\n";
+		}
+		else
+		{
+			//teraz mamy ju¿ pewnoœæ, ¿e zbudowane domki nie bêd¹ na siebie nachodziæ
+			posATab[i].x = posA.x;
+			posATab[i].y = posA.y;
+			posATab[i].z = posA.z;
+
+			//houseX = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 2.0));
+			houseX = (max((float)0.4, (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 1.5))))* (float)WALL_LENGTH;
+			posB.x = posA.x + houseX;	//Punkt B w OSI X bêdzie oddalony od punktu A o wartoœæ <0.2-0.5> bazowej d³ugoœci œciany
+			houseY = (max((float)0.2, (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 3.0))))* (float)WALL_LENGTH;
+			posB.y = posA.y + houseY;	//Punkt B w OSI Y bêdzie oddalony od punktu A o wartoœæ <0.1-0.25> bazowej d³ugoœci œciany
+			posB.z = posA.z;
+
+			posBp.x = posA.x - houseX;
+			posBp.y = posA.y - houseY;
+			posBp.z = posA.z;
+
+			posC.x = posA.x - houseX;
+			posC.y = posB.y;
+			posC.z = posA.z;
+
+			posCp.x = posB.x;
+			posCp.y = posA.y - houseY;
+			posCp.z = posA.z;
+
+			posD.x = posB.x;
+			posD.y = posB.y;
+			posD.z = posB.z + wallHeight;
+
+			posDp.x = posBp.x;
+			posDp.y = posBp.y;
+			posDp.z = posBp.z + wallHeight;
+
+			posE.x = posC.x;
+			posE.y = posC.y;
+			posE.z = posC.z + wallHeight;
+
+			posEp.x = posCp.x;
+			posEp.y = posCp.y;
+			posEp.z = posCp.z + wallHeight;	//
+
+			posF.x = posA.x;
+			posF.y = posB.y;
+			posF.z = posA.z + 1.5 * wallHeight;
+
+			posFp.x = posA.x;
+			posFp.y = posBp.y;
+			posFp.z = posA.z + 1.5 * wallHeight;
+
+			//teraz mamy ju¿ wszystkie wierzcho³ki domku. Pozosta³o po³¹czyæ je w trójk¹ty i odpowiednio wpakowaæ do tabeli
+			/*
+				Trójk¹ty:
+
+			#0  BCB`		132		->jeœlibyœmy chcieli robiæ te¿ pod³ogê
+			#1  B`C`B		241		->jeœlibyœmy chcieli robiæ te¿ pod³ogê
+
+			2  B`EC		273
+			3  D`EB`	672
+			4  CEB		371
+			5  EDB		751
+			6  B`D`C`	264
+			7  C`D`E`	468
+			8  E`DC`	854
+			9  BC`D		145
+			10 EFD		795
+			11 B`F`E`	2(10)8
+			12 D`F`E	6(10)8
+			13 F`FE		(10)97
+			14 FF`E`	9(10)8
+			15 E`DF		859
+
+			*/
+
+			copyPoint(i, 0, 0, posBp);
+			copyPoint(i, 1, 1, posE);
+			copyPoint(i, 2, 2, posC);
+
+			copyPoint(i, 3, 0, posDp);
+			copyPoint(i, 4, 1, posE);
+			copyPoint(i, 5, 2, posBp);
+
+			copyPoint(i, 6, 0, posC);
+			copyPoint(i, 7, 1, posE);
+			copyPoint(i, 8, 2, posB);
+
+			copyPoint(i, 9, 0, posE);
+			copyPoint(i, 10, 1, posD);
+			copyPoint(i, 11, 2, posB);
+
+			copyPoint(i, 12, 0, posBp);
+			copyPoint(i, 13, 1, posDp);
+			copyPoint(i, 14, 2, posCp);
+
+			copyPoint(i, 15, 0, posCp);
+			copyPoint(i, 16, 1, posDp);
+			copyPoint(i, 17, 2, posEp);
+
+			copyPoint(i, 18, 0, posEp);
+			copyPoint(i, 19, 1, posD);
+			copyPoint(i, 20, 2, posCp);
+
+			copyPoint(i, 21, 0, posB);
+			copyPoint(i, 22, 1, posCp);
+			copyPoint(i, 23, 2, posD);
+
+			copyPoint(i, 24, 0, posE);
+			copyPoint(i, 25, 1, posF);
+			copyPoint(i, 26, 2, posD);
+
+			copyPoint(i, 27, 0, posBp);
+			copyPoint(i, 28, 1, posFp);
+			copyPoint(i, 29, 2, posEp);
+
+			copyPoint(i, 30, 0, posDp);
+			copyPoint(i, 31, 1, posFp);
+			copyPoint(i, 32, 2, posE);
+
+			copyPoint(i, 33, 0, posFp);
+			copyPoint(i, 34, 1, posF);
+			copyPoint(i, 35, 2, posE);
+
+			copyPoint(i, 36, 0, posF);
+			copyPoint(i, 37, 1, posFp);
+			copyPoint(i, 38, 2, posEp);
+
+			copyPoint(i, 39, 0, posEp);
+			copyPoint(i, 40, 1, posD);
+			copyPoint(i, 41, 2, posF);
+		}
+	}
+	//skoñczono generowaæ domki
+}
 
 void loadTerrain(GLuint texture, const char* textureFile) {
 	
@@ -128,13 +376,19 @@ void loadTerrain(GLuint texture, const char* textureFile) {
 
 
 void terrain() {
-	glGenBuffers(1, vbo_id);
+	glGenBuffers(2, vbo_id);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata)	, vdata, GL_STATIC_DRAW);
 
-	glGenTextures(2, terrainText);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vhouse), vhouse, GL_STATIC_DRAW);
+
+
+	glGenTextures(4, terrainText);
 	loadTerrain(terrainText[0], "soil.jpg");
 	loadTerrain(terrainText[1], "grass.jpg");
+	loadTerrain(terrainText[2], "roof.jpg");
+	loadTerrain(terrainText[3], "wallW.jpg");
 }
 
 void drawTerrain() {
@@ -146,6 +400,7 @@ void drawTerrain() {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 
+
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
 	glUniform1i(glGetUniformLocation(programHandle, "texture1"), 0);
@@ -156,11 +411,38 @@ void drawTerrain() {
 	glUniform1i(glGetUniformLocation(programHandle, "texture2"), 1);
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 	
+	//===============================================================
+	glActiveTexture(GL_TEXTURE2);
+	glEnable(GL_TEXTURE_2D);
+	glUniform1i(glGetUniformLocation(programHandle, "texture3"), 2);
+	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 	
-	
+	glActiveTexture(GL_TEXTURE3);
+	glEnable(GL_TEXTURE_2D);
+	glUniform1i(glGetUniformLocation(programHandle, "texture4"), 3);
+	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
+	//==============================================================
 
+	//terrain
 	glDrawArrays(GL_PATCHES, 0, 6);
 
+	//================================================================
+	//prze³¹czanie shaderów
+	setShaders("house.vs", "house.fs", "subdiv_p.geom", "house.tcs", "house.es");
+
+	
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
+	glEnableVertexAttribArray(2);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(3);
+
+
+	//houses
+	glDrawArrays(GL_PATCHES, 0, 42 * HOUSE_COUNTER);
+	//=================================================================
+	setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
@@ -245,6 +527,12 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 	}
 
 	viewMatrix = glGetUniformLocation(programHandle, "view_matrix");
+
+	GLint wallHLocation = glGetUniformLocation(programHandle, "wallH");
+	GLint ZLocation = glGetUniformLocation(programHandle, "Zvalue");
+	glUseProgram(programHandle);
+	glUniform1f(wallHLocation, wallHeight);
+	glUniform1f(ZLocation, Z);
 }
 
 // Drawing (display) routine.
@@ -434,6 +722,7 @@ int main(int argc, char** argv)
 	glutCreateWindow("cw6 - Ekspozja");
 
 	// Initialize.
+	createHouses();
 	setup();
 	extensionSetup();
 	terrain();
