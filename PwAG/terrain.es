@@ -9,6 +9,7 @@ out vec2 TexGeoCoord_FS_in;
 out vec3 WorldPos_FS_in;
 
 uniform mat4 view_matrix;
+uniform sampler2D heightMap;
 
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)
 {
@@ -38,9 +39,13 @@ void main(){
 
 	//gl_Position = WorldPos_FS_in;
 
+	vec4 texel0 = texture(heightMap, TexGeoCoord_FS_in.xy);
+	//WorldPos_FS_in += texture(heightMap, TexGeoCoord_FS_in.xy).x;
+
 	double wX = WorldPos_FS_in.x;
-	//double wY = sin((WorldPos_FS_in.x + WorldPos_FS_in.z)*2)*0.3;
-	double wY = WorldPos_FS_in.y;
+	//double wY = sin((WorldPos_FS_in.x + WorldPos_FS_in.z)*8)*0.1;
+	double wY = texel0.x;
+	//double wY = WorldPos_FS_in.y;
 	double wZ = WorldPos_FS_in.z;
 	gl_Position = vec4(wX, wY, wZ , 1.0) * view_matrix;
 }

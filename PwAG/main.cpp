@@ -12,6 +12,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <math.h>  
+#include "Heightmap.hpp"
 #include <time.h>     
 #include <algorithm>
 
@@ -38,7 +39,7 @@ static int esShaderHandle; // obiekt shadera geometrii
 
 
 
-GLuint* terrainText = new GLuint[4];
+GLuint* terrainText = new GLuint[5];
 
 unsigned int texture1;
 unsigned int texture2;
@@ -104,9 +105,21 @@ GLdouble centerx = 6;
 GLdouble centery = 77;
 GLdouble centerz = 100;
 
+int heightMapHeight = 100;
+int heightMapWidth = 100;
+int numHills = 1;
+int hillRadiusMin = 1;
+int hillRadiusMax = 2;
+float hillMinHeight = 0.01;
+float hillMaxHeight = 0.1;
+
 glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
 glm::vec3 cameraTarget = glm::vec3(centerx, centery, centerz);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+HillAlgorithmParameters hill = HillAlgorithmParameters(heightMapHeight, heightMapWidth, numHills,
+										hillRadiusMin, hillRadiusMax, hillMinHeight, hillMaxHeight);
+vector<vector<float>> heightmap = generateRandomHeightData(hill);
+
 
 GLfloat Z = 0.1;
 
@@ -380,15 +393,25 @@ void terrain() {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata)	, vdata, GL_STATIC_DRAW);
 
+	glGenTextures(3, terrainText);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vhouse), vhouse, GL_STATIC_DRAW);
 
 
-	glGenTextures(4, terrainText);
+	glGenTextures(5, terrainText);
 	loadTerrain(terrainText[0], "soil.jpg");
 	loadTerrain(terrainText[1], "grass.jpg");
-	loadTerrain(terrainText[2], "roof.jpg");
-	loadTerrain(terrainText[3], "wallW.jpg");
+
+	glBindTexture(GL_TEXTURE_2D, terrainText[2]);
+	// set the texture wrapping/filtering options (on the currently bound texture object)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, heightMapHeight, heightMapWidth, 0, GL_DEPTH_COMPONENT, GL_FLOAT, heightmap.data());
+	loadTerrain(terrainText[3], "roof.jpg");
+	loadTerrain(terrainText[4], "wallW.jpg");
 }
 
 void drawTerrain() {
@@ -411,15 +434,21 @@ void drawTerrain() {
 	glUniform1i(glGetUniformLocation(programHandle, "texture2"), 1);
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 	
+
+	glActiveTexture(GL_TEXTURE2);
+	glEnable(GL_TEXTURE_2D);
+	glUniform1i(glGetUniformLocation(programHandle, "heightMap"), 2);
+	glBindTexture(GL_TEXTURE_2D, terrainText[2]);
+	
 	//===============================================================
 	glActiveTexture(GL_TEXTURE2);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "texture3"), 2);
+	glUniform1i(glGetUniformLocation(programHandle, "texture3"), 3);
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 	
 	glActiveTexture(GL_TEXTURE3);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "texture4"), 3);
+	glUniform1i(glGetUniformLocation(programHandle, "texture4"), 4);
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 	//==============================================================
 
@@ -706,6 +735,8 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 // registers callback routines and begins processing.
 int main(int argc, char** argv)
 {
+	//display(heightmap);
+
 	// Initialize GLUT.
 	glutInit(&argc, argv);
 
@@ -738,6 +769,7 @@ int main(int argc, char** argv)
 
 	// Begin processing.
 	glutMainLoop();
+
 
 	return 0;
 }
