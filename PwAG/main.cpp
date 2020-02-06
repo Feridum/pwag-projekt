@@ -129,14 +129,16 @@ GLuint* terrainText = new GLuint[2];
 //===================================================================================================================================================================================
 
 
-#define HOUSE_COUNTER			1
+
 #define MAX_HOUSE_COUNTER		10
+#define HOUSE_QUANTITY			3
+#define HOUSE_COUNTER			min(HOUSE_QUANTITY,MAX_HOUSE_COUNTER)
 #define MIN_X					-1
 #define MAX_X					1
 #define MIN_Y					-1
 #define MAX_Y					1
 #define PROPORTION				0.2
-#define WALL_LENGTH				(abs(MIN_X) + abs(MAX_X))*PROPORTION
+#define WALL_LENGTH				(abs(MIN_X) + abs(MAX_X))*PROPORTION*0.5
 
 //[7] -> [P1.x, P1.y, P1.z, P2.x, P2.y, P2.z, wallH] 
 float houses[HOUSE_COUNTER][7] = {
@@ -147,12 +149,13 @@ unsigned int texture1;
 unsigned int texture2;
 
 static GLint houseNumLocation;
-static GLint houseFirstPartcLocation;
-static GLint houseSecoundPartcLocation;
-static GLint houseThirdPartcLocation;
-static GLint houseFourthPartcLocation;
-static GLint houseFifthPartcLocation;
+//static GLint houseFirstPartcLocation;
+//static GLint houseSecoundPartcLocation;
+//static GLint houseThirdPartcLocation;
+//static GLint houseFourthPartcLocation;
+//static GLint houseFifthPartcLocation;
 //static GLfloat test[7] = { 1,2,3,4,5,6,7 };
+float wallHeight = 0;
 
 GLuint vbo_id[2];
 GLfloat xyz[20 * 3][3] = { 0 };
@@ -226,7 +229,11 @@ static GLfloat vdata[6][5] = {
 void copyPoint(int i, int j, int t, glm::vec3 Point)
 {
 	srand(time(NULL));
-
+	/* PIERWOWZÓR
+	vhouse[i * 42 + j][0] = Point.x;
+	vhouse[i * 42 + j][1] = Point.y;
+	vhouse[i * 42 + j][2] = Point.z;
+	*/
 	vhouse[i * 42 + j][0] = Point.x;
 	vhouse[i * 42 + j][1] = Point.y;
 	vhouse[i * 42 + j][2] = Point.z;
@@ -260,7 +267,6 @@ void createHouses()
 	//(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) -> liczba losowa typu float z zakresu 0-1
 	srand(time(NULL));
 	glm::vec3 posA, posB, posBp, posC, posCp, posD, posDp, posE, posEp, posF, posFp;
-	float wallHeight = 0; 
 	float houseX, houseY;
 
 	glm::vec3 posATab[HOUSE_COUNTER];
@@ -274,6 +280,9 @@ void createHouses()
 		posATab[i].z = 0;
 	}
 
+	wallHeight = max((float)(WALL_LENGTH / 2.0), (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (WALL_LENGTH / 1.0))));
+
+
 
 	for (int i = 0; i < HOUSE_COUNTER; i++)
 	{
@@ -281,7 +290,7 @@ void createHouses()
 		posA.y = MIN_Y + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_Y) + abs(MIN_Y))));
 		posA.z = Z;
 
-		wallHeight = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX/(WALL_LENGTH/4.0)));
+		//wallHeight = max((float)(WALL_LENGTH/4.0) ,(static_cast <float> (rand()) / static_cast <float> (RAND_MAX/(WALL_LENGTH/2.0))));
 
 		//je¿eli mamy ju¿ jakieœ punkty A, to musimy sprawdziæ, czy nie le¿¹ za blisko siebie - czy zbudowane na nich domki nie bêd¹ na siebie nachodziæ
 		if (posATab[0].x != 0 || posATab[0].y != 0 || posATab[0].z != 0)		//jeœli tak, to znaczy, ¿e mamy ju¿ jakieœ domki
@@ -296,14 +305,14 @@ void createHouses()
 				{
 					if (posATab[j].x != 0 || posATab[j].y != 0 || posATab[j].z != 0)
 					{
-						if (pow(posATab[j].x - posA.x, 2.0) + pow(posATab[j].y - posA.y, 2.0) <= pow(WALL_LENGTH, 2.0) * 2)
+						if (pow(posATab[j].x - posA.x, 2.0) + pow(posATab[j].y - posA.y, 2.0) <= pow(WALL_LENGTH * 2, 2.0) )
 						{
 							colide = true;
 							break;
 						}
 					}
 				}
-				if (colide = true)
+				if (colide == true)
 				{
 					posA.x = MIN_X + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_X) + abs(MIN_X))));
 					posA.y = MIN_Y + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_Y) + abs(MIN_Y))));
@@ -323,9 +332,9 @@ void createHouses()
 			posATab[i].z = posA.z;
 
 			//houseX = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 2.0));
-			houseX = (max((float)0.2, (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 2.0))))* (float)WALL_LENGTH;
+			houseX = (max((float)0.4, (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 1.5))))* (float)WALL_LENGTH;
 			posB.x = posA.x + houseX;	//Punkt B w OSI X bêdzie oddalony od punktu A o wartoœæ <0.2-0.5> bazowej d³ugoœci œciany
-			houseY = (max((float)0.1, (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 4.0))))* (float)WALL_LENGTH;
+			houseY = (max((float)0.2, (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 3.0))))* (float)WALL_LENGTH;
 			posB.y = posA.y + houseY;	//Punkt B w OSI Y bêdzie oddalony od punktu A o wartoœæ <0.1-0.25> bazowej d³ugoœci œciany
 			posB.z = posA.z;
 
@@ -355,7 +364,7 @@ void createHouses()
 
 			posEp.x = posCp.x;
 			posEp.y = posCp.y;
-			posEp.z = posCp.z + wallHeight;
+			posEp.z = posCp.z + wallHeight;	//
 
 			posF.x = posA.x;
 			posF.y = posB.y;
@@ -484,8 +493,10 @@ void terrain() {
 	
 
 	glGenTextures(2, terrainText);
-	loadTerrain(terrainText[0], "soil.jpg");
-	loadTerrain(terrainText[1], "grass.jpg");
+	//loadTerrain(terrainText[0], "grass.jpg");
+	//loadTerrain(terrainText[1], "soil.jpg");
+	loadTerrain(terrainText[0], "roof.jpg");
+	loadTerrain(terrainText[1], "wallW.jpg");
 }
 
 void drawTerrain() {		//tutaj dzieje siê magia
@@ -510,8 +521,8 @@ void drawTerrain() {		//tutaj dzieje siê magia
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 	
 
-	glDrawArrays(GL_PATCHES, 0, 6);
-
+	//glDrawArrays(GL_PATCHES, 0, 6);
+	glDrawArrays(GL_PATCHES, 0, 42 * HOUSE_COUNTER);
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
@@ -600,8 +611,8 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 	//przekazywanie parametrów przez uniforma
 
 	houseNumLocation = glGetUniformLocation(programHandle, "houseNum");
-	houseFirstPartcLocation = glGetUniformLocation(programHandle, "houseFirstPart");
-	houseSecoundPartcLocation = glGetUniformLocation(programHandle, "houseSecoundPart");
+	//houseFirstPartcLocation = glGetUniformLocation(programHandle, "houseFirstPart");
+	//houseSecoundPartcLocation = glGetUniformLocation(programHandle, "houseSecoundPart");
 
 	//glUniform3fv
 
@@ -618,6 +629,11 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 	//przekazujemy jako osobn¹ zmienn¹ liczbê domków. Skoro ka¿dy domek to 7 float'ów, to w GPU bêdziemy mogli dzieki temu wiedzieæ ile zmiennych mamy odczytaæ z wektora
 	glUseProgram(programHandle);
 	glUniform1i(houseNumLocation, HOUSE_COUNTER);
+	GLint wallHLocation = glGetUniformLocation(programHandle, "wallH");
+	GLint ZLocation = glGetUniformLocation(programHandle, "Zvalue");
+	glUseProgram(programHandle);
+	glUniform1f(wallHLocation, wallHeight);
+	glUniform1f(ZLocation, Z);
 
 	//przekazywanie zmiennych do vectora
 	/*
