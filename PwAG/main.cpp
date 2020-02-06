@@ -29,6 +29,7 @@
 
 using namespace std;
 
+void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, const char* geom, const char* tcs, const char* es);
 
 static int programHandle; // obiekt programu
 static int vertexShaderHandle; // obiekt shadera wierzcho³ków
