@@ -129,8 +129,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="House.es" />
-    <None Include="House.fs" />
+    <None Include="house.es" />
+    <None Include="house.fs" />
     <None Include="subdiv.fs" />
     <None Include="subdiv.vs" />
     <None Include="subdiv_p.geom" />

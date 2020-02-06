@@ -837,7 +837,8 @@ int main(int argc, char** argv)
 	// Register reshape routine.
 	glutReshapeFunc(resize);
 
-	setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
+	//setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
+	setShaders("subdiv.vs", "house.fs", "subdiv_p.geom", "terrain.tcs", "house.es");
 
 	// Begin processing.
 	glutMainLoop();

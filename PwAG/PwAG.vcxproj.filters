@@ -35,10 +35,10 @@
     <None Include="terrain.tcs">
       <Filter>Pliki źródłowe</Filter>
     </None>
-    <None Include="House.es">
+    <None Include="house.fs">
       <Filter>Pliki źródłowe</Filter>
     </None>
-    <None Include="House.fs">
+    <None Include="house.es">
       <Filter>Pliki źródłowe</Filter>
     </None>
   </ItemGroup>
