@@ -35,6 +35,12 @@
     <None Include="terrain.tcs">
       <Filter>Pliki źródłowe</Filter>
     </None>
+    <None Include="House.es">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
+    <None Include="House.fs">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
