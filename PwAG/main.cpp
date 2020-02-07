@@ -15,6 +15,8 @@
 #include "Heightmap.hpp"
 #include <time.h>     
 #include <algorithm>
+#include <random>
+#include <vector>
 
 #define PI 3.14159265
 #define MAX_HOUSE_COUNTER		10
@@ -67,6 +69,7 @@ PFNGLGETOBJECTPARAMETERIVARBPROC glGetObjectParameterivARB = NULL;
 PFNGLGETINFOLOGARBPROC glGetInfoLogARB = NULL;
 PFNGLGETUNIFORMLOCATIONPROC  glGetUniformLocation = NULL;
 PFNGLUNIFORM1FPROC glUniform1f = NULL;
+PFNGLUNIFORM2FVPROC glUniform2fv = NULL;
 PFNGLUNIFORM1IPROC glUniform1i = NULL;
 PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = NULL;
 PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv = NULL;
@@ -111,11 +114,26 @@ GLdouble centerz = 100;
 
 int heightMapHeight = 100;
 int heightMapWidth = 100;
-int numHills = 5;
-int hillRadiusMin = 1;
-int hillRadiusMax = 10;
-float hillMinHeight = 0.01;
-float hillMaxHeight = 0.05;
+//change also in terrain.es file
+int numHills = 4;
+float hillRadiusMin = 0.3;
+float hillRadiusMax = 0.4;
+float hillMinHeight = 0.2;
+float hillMaxHeight = 0.3;
+
+static GLint centers;
+static GLint height; 
+static GLint radius;
+
+
+vector<float> hillsCenters(numHills*2);
+float hillRadius;
+float hillHeight;
+
+
+
+
+
 
 glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
 glm::vec3 cameraTarget = glm::vec3(centerx, centery, centerz);
@@ -469,43 +487,43 @@ void drawTerrain() {
 
 	//================================================================
 	//prze³¹czanie shaderów
-	setShaders("house.vs", "house.fs", "subdiv_p.geom", "house.tcs", "house.es");
+	//setShaders("house.vs", "house.fs", "subdiv_p.geom", "house.tcs", "house.es");
 
-	glActiveTexture(GL_TEXTURE2);
-	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "texture3"), 3);
-	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
+	//glActiveTexture(GL_TEXTURE2);
+	//glEnable(GL_TEXTURE_2D);
+	//glUniform1i(glGetUniformLocation(programHandle, "texture3"), 3);
+	//glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 
-	glActiveTexture(GL_TEXTURE3);
-	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "texture4"), 4);
-	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
+	//glActiveTexture(GL_TEXTURE3);
+	//glEnable(GL_TEXTURE_2D);
+	//glUniform1i(glGetUniformLocation(programHandle, "texture4"), 4);
+	//glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
-	glEnableVertexAttribArray(2);
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
+	//glEnableVertexAttribArray(2);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(3);
-
-
-	//houses
-	glDrawArrays(GL_PATCHES, 0, 42 * HOUSE_COUNTER);
-
-	glDisableVertexAttribArray(2);
-	glDisableVertexAttribArray(3);
-
-	//=================================================================
-	setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
+	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)(3 * sizeof(GLfloat)));
+	//glEnableVertexAttribArray(3);
 
 
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
+	////houses
+	//glDrawArrays(GL_PATCHES, 0, 42 * HOUSE_COUNTER);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
+	//glDisableVertexAttribArray(2);
+	//glDisableVertexAttribArray(3);
+
+	////=================================================================
+	//setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
+
+
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D, 0);
+	//glDisable(GL_TEXTURE_2D);
+
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
+	//glDisable(GL_TEXTURE_2D);
 
 }
 
@@ -588,12 +606,17 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 	}
 
 	viewMatrix = glGetUniformLocation(programHandle, "view_matrix");
+	centers = glGetUniformLocation(programHandle, "hill_centers");
+	height = glGetUniformLocation(programHandle, "hill_height");
+	radius = glGetUniformLocation(programHandle, "hill_radius");
 
 	GLint wallHLocation = glGetUniformLocation(programHandle, "wallH");
 	GLint ZLocation = glGetUniformLocation(programHandle, "Zvalue");
 	glUseProgram(programHandle);
 	glUniform1f(wallHLocation, wallHeight);
-	glUniform1f(ZLocation, Z);
+	glUniform2fv(centers, hillsCenters.size(), hillsCenters.data());
+	glUniform1f(height, hillHeight);
+	glUniform1f(radius, hillRadius);
 }
 
 // Drawing (display) routine.
@@ -681,6 +704,7 @@ void extensionSetup()
 		glGetInfoLogARB = (PFNGLGETINFOLOGARBPROC)wglGetProcAddress("glGetInfoLogARB");
 		glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
 		glUniform1f = (PFNGLUNIFORM1FPROC)wglGetProcAddress("glUniform1f");
+		glUniform2fv = (PFNGLUNIFORM2FVPROC)wglGetProcAddress("glUniform2fv");
 		glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)wglGetProcAddress("glUniformMatrix4fv");
 		glUniformMatrix3fv = (PFNGLUNIFORMMATRIX3FVPROC)wglGetProcAddress("glUniformMatrix3fv");
 		glUniform1i = (PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i");
@@ -768,6 +792,24 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 int main(int argc, char** argv)
 {
 	//display(heightmap);
+	std::random_device rd;
+	std::mt19937 generator(rd());
+	uniform_real_distribution<float> hillRadiusDistribution(hillRadiusMin, hillRadiusMax);
+	uniform_real_distribution<float> hillHeightDistribution(hillMinHeight, hillMaxHeight);
+	//the same as coordinates of terrain
+	uniform_real_distribution<float> hillCenterRowIntDistribution(-0.3, 0.3);
+	uniform_real_distribution<float> hillCenterColIntDistribution(-0.3, 0.3);
+
+	for (int i = 0; i < numHills*2; i=i+2) {
+		const auto x = hillCenterRowIntDistribution(generator);
+		const auto y = hillCenterColIntDistribution(generator);
+
+		hillsCenters[i] = x;
+		hillsCenters[i+1] = y;
+	}
+
+	hillHeight = hillHeightDistribution(generator);
+	hillRadius = hillRadiusDistribution(generator);
 
 	// Initialize GLUT.
 	glutInit(&argc, argv);

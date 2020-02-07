@@ -40,9 +40,7 @@ vector<vector<float>> generateRandomHeightData(const HillAlgorithmParameters& pa
 				const auto x2x1 = hillCenterCol - c; // (x2-x1) ter
 				const auto y2y1 = hillCenterRow - r; // (y2-y1) ter
 				const auto height = float(r2 - x2x1 * x2x1 - y2y1 * y2y1);
-				if (height < 0.0f) {
-					continue;
-				}
+
 				const auto factor = height / r2;
 				heightData[r][c] += hillHeight * factor;
 				if (heightData[r][c] > 1.0f) {
