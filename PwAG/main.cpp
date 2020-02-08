@@ -174,7 +174,7 @@ PFNGLGETINFOLOGARBPROC glGetInfoLogARB = NULL;
 PFNGLGETUNIFORMLOCATIONPROC  glGetUniformLocation = NULL;
 
 PFNGLPROGRAMUNIFORM3FPROC glProgramUniform3f = NULL;
-
+PFNGLUNIFORM2FPROC glUniform2f = NULL;
 PFNGLUNIFORM1FPROC glUniform1f = NULL;
 PFNGLUNIFORM1IPROC glUniform1i = NULL;
 PFNGLUNIFORM1FVPROC glUniform1fv = NULL;
@@ -229,14 +229,21 @@ static GLfloat vdata[6][5] = {
 void copyPoint(int i, int j, int t, glm::vec3 Point)
 {
 	srand(time(NULL));
-	/* PIERWOWZÓR
+	/* //PIERWOWZOR KROTSZY BOK
 	vhouse[i * 42 + j][0] = Point.x;
 	vhouse[i * 42 + j][1] = Point.y;
 	vhouse[i * 42 + j][2] = Point.z;
 	*/
-	vhouse[i * 42 + j][0] = Point.x;
-	vhouse[i * 42 + j][1] = Point.y;
+	//DLUZSZY BOK
+	vhouse[i * 42 + j][0] = Point.y;
+	vhouse[i * 42 + j][1] = Point.x;
 	vhouse[i * 42 + j][2] = Point.z;
+
+	/* //OD GORY
+	vhouse[i * 42 + j][0] = Point.x;
+	vhouse[i * 42 + j][1] = Point.z;
+	vhouse[i * 42 + j][2] = Point.y;
+	*/
 	if (t == 0)
 	{
 		vhouse[i * 42 + j][3] = 1.0;
@@ -367,11 +374,11 @@ void createHouses()
 			posEp.z = posCp.z + wallHeight;	//
 
 			posF.x = posA.x;
-			posF.y = posB.y;
+			posF.y = posA.y + (0.8*houseY);// posB.y;
 			posF.z = posA.z + 1.5 * wallHeight;
 
 			posFp.x = posA.x;
-			posFp.y = posBp.y;
+			posFp.y = posA.y - (0.8*houseY);// posBp.y;
 			posFp.z = posA.z + 1.5 * wallHeight;
 
 			//teraz mamy ju¿ wszystkie wierzcho³ki domku. Pozosta³o po³¹czyæ je w trójk¹ty i odpowiednio wpakowaæ do tabeli
@@ -522,6 +529,21 @@ void drawTerrain() {		//tutaj dzieje siê magia
 	
 
 	//glDrawArrays(GL_PATCHES, 0, 6);
+	srand(time(NULL));
+	//GLint seedLocation = glGetUniformLocation(programHandle, "seedV");
+	GLint wallLLocation = glGetUniformLocation(programHandle, "wallLength");
+	GLint randLocation1 = glGetUniformLocation(programHandle, "randoms1");
+	GLint randLocation2 = glGetUniformLocation(programHandle, "randoms2");
+	//int seedV = time(NULL);
+	//glUniform1i(seedLocation, seedV);
+	glUniform1f(wallLLocation, WALL_LENGTH);
+	float rand1, rand2;
+	//for(){
+	rand1 = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 2.0));
+	rand2 = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 3.0));
+	glUniform1f(randLocation1, rand1);
+	glUniform1f(randLocation2, rand2);
+	//}
 	glDrawArrays(GL_PATCHES, 0, 42 * HOUSE_COUNTER);
 
 	glDisableVertexAttribArray(0);
@@ -634,6 +656,7 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 	glUseProgram(programHandle);
 	glUniform1f(wallHLocation, wallHeight);
 	glUniform1f(ZLocation, Z);
+	
 
 	//przekazywanie zmiennych do vectora
 	/*

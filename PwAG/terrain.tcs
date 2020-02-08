@@ -1,7 +1,8 @@
 #version 410 core
 
 // define the number of CPs in the output patch
-layout(vertices = 3) out;
+//layout(vertices = 3) out;
+layout(vertices = 25) out;
 
 in vec2 TexGeoCoord_CS_in[];
 //in vec3 HouseCoord_CS_in_F[gl_MaxPatchVertices];
@@ -9,23 +10,62 @@ in vec2 TexGeoCoord_CS_in[];
 
 out vec2 TexGeoCoord_ES_in[];
 //out vec4 HouseCoord_ES_in[];
+out float houseX_ES_in[];
+out float houseY_ES_in[];
+out vec4 posA_ES_in[];
 
 uniform int houseNum;
+//uniform int seedV;
+uniform float wallLength;
+uniform float randoms1;
+uniform float randoms2;
 
 void main()
 {
     // Set the control points of the output patch
     TexGeoCoord_ES_in[gl_InvocationID] = TexGeoCoord_CS_in[gl_InvocationID];
 
+    /*
     if (gl_InvocationID == 0){
         gl_TessLevelInner[0] = 10.0;
         gl_TessLevelOuter[0] = 10.0;
         gl_TessLevelOuter[1] = 10.0;
         gl_TessLevelOuter[2] = 10.0;
     }
+    */
+    if (gl_InvocationID == 0)
+    {
+       gl_TessLevelInner[0] = 4.0;
+       gl_TessLevelInner[1] = 4.0;
+       gl_TessLevelOuter[0] = 5.0;
+       gl_TessLevelOuter[1] = 5.0;
+       gl_TessLevelOuter[2] = 5.0;
+       gl_TessLevelOuter[3] = 5.0;
+
+       //srand(seedV);
+       vec4 posA = vec4(0.0, 0.0, 0.0, 1.0);
+       posA.x = gl_in[gl_InvocationID].gl_Position.x + 1.0;     //+/-  ?    
+       posA.y = gl_in[gl_InvocationID].gl_Position.y + 1.0;     //+/-  ?    
+       posA.z = gl_in[gl_InvocationID].gl_Position.z;
+
+       posA_ES_in[gl_InvocationID] = posA;
+       float houseX;
+       float houseY;
+
+       houseX = randoms1;
+       houseX = (houseX <= 0.25 ? 0.25 : houseX);
+       houseX_ES_in[gl_InvocationID] = houseX * wallLength;
+
+       houseY = randoms2;
+       houseY = (houseY <= 0.2 ? 0.2 : houseY);
+       houseY_ES_in[gl_InvocationID] = houseY * wallLength;
+    }
 
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;// + (10*houseNum)].gl_Position = gl_in[gl_InvocationID].gl_Position;
-
+    //if (gl_InvocationID%25 == 0)
+    //{
+        //
+    //}
 
 }
 
