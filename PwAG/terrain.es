@@ -6,10 +6,10 @@ in vec2 TexGeoCoord_ES_in[];
 in vec3 WorldPos_ES_in[];
 
 out vec2 TexGeoCoord_FS_in;
+out float Heigth_FS_in;
 out vec3 WorldPos_FS_in;
 
 uniform mat4 view_matrix;
-uniform sampler2D heightMap;
 
 uniform vec2 hill_centers[4];
 uniform float hill_height;
@@ -67,7 +67,6 @@ void main(){
 
 	//gl_Position = WorldPos_FS_in;
 
-	vec4 texel0 = texture(heightMap, TexGeoCoord_FS_in.xy);
 	//WorldPos_FS_in += texture(heightMap, TexGeoCoord_FS_in.xy).x;
 
 	double wX = WorldPos_FS_in.x;
@@ -76,6 +75,7 @@ void main(){
 	double wZ = WorldPos_FS_in.z;
 	double wY = calculateHeight(wX, wZ);
 	//double wY = WorldPos_FS_in.y;
-	gl_Position = vec4(wX, wY, wZ , 1.0) * view_matrix;
+	Heigth_FS_in = float(wY);
+	gl_Position = view_matrix * vec4(wX, wY, wZ + wY/2 , 1.0);
 }
 

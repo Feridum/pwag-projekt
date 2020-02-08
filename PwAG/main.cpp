@@ -112,14 +112,12 @@ GLdouble centerx = 6;
 GLdouble centery = 77;
 GLdouble centerz = 100;
 
-int heightMapHeight = 100;
-int heightMapWidth = 100;
 //change also in terrain.es file
 int numHills = 4;
 float hillRadiusMin = 0.3;
 float hillRadiusMax = 0.4;
-float hillMinHeight = 0.2;
-float hillMaxHeight = 0.3;
+float hillMinHeight = 0.4;
+float hillMaxHeight = 0.5;
 
 static GLint centers;
 static GLint height; 
@@ -138,9 +136,6 @@ float hillHeight;
 glm::vec3 cameraPos = glm::vec3(eyex, eyey, eyez);
 glm::vec3 cameraTarget = glm::vec3(centerx, centery, centerz);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-HillAlgorithmParameters hill = HillAlgorithmParameters(heightMapHeight, heightMapWidth, numHills,
-										hillRadiusMin, hillRadiusMax, hillMinHeight, hillMaxHeight);
-vector<vector<float>> heightmap = generateRandomHeightData(hill);
 
 
 GLfloat Z = 0.1;
@@ -148,8 +143,8 @@ GLfloat Z = 0.1;
 static GLfloat vhouse[HOUSE_COUNTER * 42][5] = { 0 };
 
 static GLfloat vdata[6][5] = {
-	{-0.5, Z, 0.0, 1.0, 1.0}, {-0.5, Z, 0.5, 1.0, 0.0 }, {0.5, Z, 0.5, 0.0, 0.0},
-	{0.5, Z, 0.5, 1.0, 1.0}, {0.5, Z, 0.0, 1.0, 0.0}, {-0.5, Z, 0.0, 0.0}
+	{-1.0, Z, 0.0, 1.0, 1.0}, {-1.0, Z, 1.0, 1.0, 0.0 }, {1.0, Z, 1.0, 0.0, 0.0},
+	{1.0, Z, 1.0, 1.0, 1.0}, {1.0, Z, 0.0, 1.0, 0.0}, {-1.0, Z, 0.0, 0.0}
 };
 
 /*
@@ -427,7 +422,6 @@ void terrain() {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata)	, vdata, GL_STATIC_DRAW);
 
-	//glGenTextures(3, terrainText);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vhouse), vhouse, GL_STATIC_DRAW);
 
@@ -435,15 +429,7 @@ void terrain() {
 	glGenTextures(5, terrainText);
 	loadTerrain(terrainText[0], "soil.jpg");
 	loadTerrain(terrainText[1], "grass.jpg");
-
-	glBindTexture(GL_TEXTURE_2D, terrainText[2]);
-	// set the texture wrapping/filtering options (on the currently bound texture object)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, heightMapHeight, heightMapWidth, 0, GL_DEPTH_COMPONENT, GL_FLOAT, heightmap.data());
+	loadTerrain(terrainText[2], "snow.jpg");
 	loadTerrain(terrainText[3], "roof.jpg");
 	loadTerrain(terrainText[4], "wallW.jpg");
 }
@@ -460,18 +446,18 @@ void drawTerrain() {
 
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "texture1"), 0);
+	glUniform1i(glGetUniformLocation(programHandle, "soil"), 0);
 	glBindTexture(GL_TEXTURE_2D, terrainText[0]);
 
 	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "texture2"), 1);
+	glUniform1i(glGetUniformLocation(programHandle, "grass"), 1);
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 	
 
 	glActiveTexture(GL_TEXTURE2);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "heightMap"), 2);
+	glUniform1i(glGetUniformLocation(programHandle, "snow"), 2);
 	glBindTexture(GL_TEXTURE_2D, terrainText[2]);
 	
 	//===============================================================
@@ -538,16 +524,7 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 	char* tcsShader = readShader(tcs);
 	char* esShader = readShader(es);
 
-	//if (firstShader)
-	//{
-		programHandle = glCreateProgram(); // tworzenie obiektu programu
-	//	firstShader = false;
-	//}
-	//else
-	//{
-	//	glDeleteProgram(programHandle);
-	//	programHandle = glCreateProgram();
-	//}
+	programHandle = glCreateProgram(); // tworzenie obiektu programu
 	vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER); // shader wierzcho³ków
 	fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER); // shader fragmentów
 	geomShaderHandle = glCreateShader(GL_GEOMETRY_SHADER); // shader fragmentów
@@ -591,7 +568,6 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 	glAttachShader(programHandle, tcsShaderHandle);
 	glAttachShader(programHandle, esShaderHandle);
 	glAttachShader(programHandle, fragmentShaderHandle);
-	//glAttachShader(programHandle, geomShaderHandle);
 
 	/* link */
 	//uruchomienie
@@ -638,6 +614,7 @@ void drawScene(void)
 	glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
 	glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(view));
 
+	
 	drawTerrain();
 	
 	// Flush created objects to the screen, i.e., force rendering.
@@ -670,8 +647,7 @@ void resize(int w, int h)
 
 	// Specify the orthographic (or perpendicular) projection, 
 	// i.e., define the viewing box.
-	gluPerspective(-80, w / h, 0.1, 1000);
-
+	gluPerspective(-60, w / h, 0.1, 1000);
 	//glFrustum(-10.0, 10.0, -10.0, 10.0, 0.0, 200.0);
 	// Set matrix mode to modelview.
 	glMatrixMode(GL_MODELVIEW);
@@ -797,12 +773,15 @@ int main(int argc, char** argv)
 	uniform_real_distribution<float> hillRadiusDistribution(hillRadiusMin, hillRadiusMax);
 	uniform_real_distribution<float> hillHeightDistribution(hillMinHeight, hillMaxHeight);
 	//the same as coordinates of terrain
-	uniform_real_distribution<float> hillCenterRowIntDistribution(-0.3, 0.3);
-	uniform_real_distribution<float> hillCenterColIntDistribution(-0.3, 0.3);
-
+	uniform_real_distribution<float> hillCenterRowIntDistribution(-0.2, 0.6);
+	uniform_real_distribution<float> hillCenterColIntDistribution(-0.0, 0.8);
+	float x;
+	float y;
 	for (int i = 0; i < numHills*2; i=i+2) {
-		const auto x = hillCenterRowIntDistribution(generator);
-		const auto y = hillCenterColIntDistribution(generator);
+		do {
+			x = hillCenterRowIntDistribution(generator);
+			y = hillCenterColIntDistribution(generator);
+		} while (x * x + y * y < 0.5);
 
 		hillsCenters[i] = x;
 		hillsCenters[i+1] = y;
