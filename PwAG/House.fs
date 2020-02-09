@@ -17,7 +17,7 @@ void main()
 	vec4 texel0 = texture(texture1, TexGeoCoord_FS_in);
 	vec4 texel1 = texture(texture2, TexGeoCoord_FS_in);
 	
-	if (Zvalue+wallH > HousePosition_FS_in.y)
+	if (Zvalue+wallH > HousePosition_FS_in.z)
 	{
 		FragColor = texel1;	//soil -> wall
 	}

@@ -5,35 +5,47 @@
 layout(vertices = 25) out;
 
 in vec2 TexGeoCoord_CS_in[];
-//in vec3 HouseCoord_CS_in_F[gl_MaxPatchVertices];
-//in vec4 HouseCoord_CS_in_S[gl_MaxPatchVertices];
 
 out vec2 TexGeoCoord_ES_in[];
 //out vec4 HouseCoord_ES_in[];
-out float houseX_ES_in[];
-out float houseY_ES_in[];
-out vec4 posA_ES_in[];
+//out float houseX_ES_in[];
+//out float houseY_ES_in[];
+//out vec4 posA_ES_in[];
 
 uniform int houseNum;
 //uniform int seedV;
 uniform float wallLength;
 uniform float randoms1;
 uniform float randoms2;
+uniform float vertexAX;
+uniform float vertexAY;
+uniform float wallH;
+uniform float Zvalue;
 
 void main()
 {
     // Set the control points of the output patch
     TexGeoCoord_ES_in[gl_InvocationID] = TexGeoCoord_CS_in[gl_InvocationID];
 
-    /*
-    if (gl_InvocationID == 0){
-        gl_TessLevelInner[0] = 10.0;
-        gl_TessLevelOuter[0] = 10.0;
-        gl_TessLevelOuter[1] = 10.0;
-        gl_TessLevelOuter[2] = 10.0;
-    }
-    */
-    if (gl_InvocationID == 0)
+    float houseX;
+    float houseY;
+
+    houseX = randoms1;
+    houseX = (houseX <= 0.25 ? 0.25 : houseX);
+    houseX = houseX * wallLength;
+    //houseX_ES_in[gl_InvocationID] = houseX * wallLength;
+
+    houseY = randoms2;
+    houseY = (houseY <= 0.2 ? 0.2 : houseY);
+    houseY = houseY * wallLength;
+    //houseY_ES_in[gl_InvocationID] = houseY * wallLength;
+
+    vec3 posA = vec3(0.0, 0.0, 0.0);
+    posA.x = vertexAX;   
+    posA.y = vertexAY;  
+    posA.z = Zvalue;  
+
+	if (gl_InvocationID == 0)
     {
        gl_TessLevelInner[0] = 4.0;
        gl_TessLevelInner[1] = 4.0;
@@ -42,75 +54,196 @@ void main()
        gl_TessLevelOuter[2] = 5.0;
        gl_TessLevelOuter[3] = 5.0;
 
-       //srand(seedV);
-       vec4 posA = vec4(0.0, 0.0, 0.0, 1.0);
-       posA.x = gl_in[gl_InvocationID].gl_Position.x + 1.0;     //+/-  ?    
-       posA.y = gl_in[gl_InvocationID].gl_Position.y + 1.0;     //+/-  ?    
-       posA.z = gl_in[gl_InvocationID].gl_Position.z;
+       //posA_ES_in[gl_InvocationID] = posA;
 
-       posA_ES_in[gl_InvocationID] = posA;
-       float houseX;
-       float houseY;
-
-       houseX = randoms1;
-       houseX = (houseX <= 0.25 ? 0.25 : houseX);
-       houseX_ES_in[gl_InvocationID] = houseX * wallLength;
-
-       houseY = randoms2;
-       houseY = (houseY <= 0.2 ? 0.2 : houseY);
-       houseY_ES_in[gl_InvocationID] = houseY * wallLength;
     }
 
-    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;// + (10*houseNum)].gl_Position = gl_in[gl_InvocationID].gl_Position;
-    //if (gl_InvocationID%25 == 0)
-    //{
-        //
-    //}
+	/*
+	4	9	14	19	24
+	3	8	13	18	23
+	2	7	12	17	22
+	1	6	11	16	21
+	0	5	10	15	20
+
+	Pos³uguj¹c siê terminologi¹ (punktologi¹?) z main'a mo¿emy przypisaæ wierzcho³ki do nastêpuj¹cych punktów: 
+	B - 0,		Bp - 24
+	C - 20,		Cp - 4
+	D - 6,		Dp - 18
+	E - 16,		Ep - 8
+	UWAGA! ZMIANA KONCEPCJI! DOMEK BÊDIZE MIA£ JEDEN, CENTRALNY PUNKT DACHU F - 12, ZAMIAST		F - 11,		Fp - 13
+
+	Pozosata³e 15 wierzcho³ków nale¿y ustawiæ odpowiednio pomiêdzy owymi punktami:
+	1,2,3:		Pomiêdzy B i Cp, ka¿dy oddalony o 1/4 odleg³oœci pomiêdzy tymi punktami
+	5,10,15:	Pomiêdzy B i C (jak wy¿ej)
+	9,14,19:	Pomiêdzy Cp i Bp (jak wy¿ej)
+	21,22,23:	Pomiêdzy C i Bp (jak wy¿ej)
+	7:			W po³owie odleg³oœci pomiêdzy D i Ep
+	11:			W po³owie odleg³oœci pomiêdzy D i E
+	13:			W po³owie odleg³oœci pomiêdzy Dp i Ep
+	16:			W po³owie odleg³oœci pomiêdzy E i Dp
+	12:			<~!W po³owie odleg³oœci pomiêdzy F i Fp~>	Punkt 12 jest teraz centrum dachu - po³o¿ony jest nad punktem A o pó³tora wysokoœci œciany 
+	*/
+
+	vec4 pos = vec4(1.0, 1.0, 1.0, 1.0);
+	switch(gl_InvocationID)
+	{
+		case 0:								//punkt B
+			pos.x = posA.x + houseX;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 1:	// 1/4 dystansu miêdzy B i Cp
+			pos.x = posA.x + houseX;
+			pos.y = posA.y + (0.5 * houseY);
+			pos.z = posA.z;
+			break;
+
+		case 2:	// 2/4 dystansu miêdzy B i Cp
+			pos.x = posA.x + houseX;
+			pos.y = posA.y;
+			pos.z = posA.z;
+			break;
+
+		case 3:	// 3/4 dystansu miêdzy B i Cp
+			pos.x = posA.x + houseX;
+			pos.y = posA.y - (0.5 * houseY);
+			pos.z = posA.z;
+			break;
+				
+		case 4:								//punkt Cp
+			pos.x = posA.x + houseX;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;						
+			break;
+
+		case 5: // 1/4 dystansu miêdzy B i C
+			pos.x = posA.x + (0.5 * houseX);
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 6:								//punkt D
+			pos.x = posA.x + houseX;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 7:	// 1/2 dystansu miêdzy D i Ep
+			pos.x = posA.x + houseX;
+			pos.y = posA.y;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 8:								//punkt Ep
+			pos.x = posA.x + houseX;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 9: // 1/4 dystansu miêdzy Cp i Bp
+			pos.x = posA.x + (0.5 * houseX);
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;
+			break;
+
+		case 10: // 2/4 dystansu miêdzy B i C
+			pos.x = posA.x;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 11: // 1/2 dystansu miêdzy D i E
+			pos.x = posA.x;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 12:							//punkt F
+			pos.x = posA.x;
+			pos.y = posA.y;
+			pos.z = posA.z + (1.5*wallH);
+			break;
+
+		case 13: // 1/2 dystansu miêdzy Ep i Dp
+			pos.x = posA.x;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 14: // 2/4 dystansu miêdzy Cp i Bp
+			pos.x = posA.x;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;
+			break;
+
+		case 15: // 3/4 dystansu miêdzy B i C
+			pos.x = posA.x - (0.5 * houseX);
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 16:							//punkt E
+			pos.x = posA.x - houseX;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 17: // 1/2 dystansu miêdzy E i Dp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 18:							//punkt Dp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 19: // 3/4 dystansu miêdzy Cp i Bp	
+			pos.x = posA.x - (0.5 * houseX);
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;
+			break;
+
+		case 20:							//punkt C	
+			pos.x = posA.x - houseX;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 21: // 1/4 dystansu miêdzy C i Bp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y + (0.5 * houseY);
+			pos.z = posA.z;
+			break;
+
+		case 22: // 2/4 dystansu miêdzy C i Bp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y;
+			pos.z = posA.z;
+			break;
+
+		case 23: // 3/4 dystansu miêdzy C i Bp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y - (0.5 * houseY);
+			pos.z = posA.z;
+			break;
+
+		case 24:							//punkt Bp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;
+			break;
+
+		default:
+			//error! Nie znaleziono punktu na p³acie
+			break;
+	}
+
+
+
+    gl_out[gl_InvocationID].gl_Position = pos;			//gl_in[gl_InvocationID].gl_Position;// + (10*houseNum)].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
 }
-
-
-
-
-
-
-
-    /*
-    float houseX, houseY, houseWallH;
-    vec4 posA, posB, posBp, posC, posCp, posD, posDp, posE, posEp, posF, posFp;
-
-    //============================
-    //na ka¿dy domek wysy³amy dalej wszystkie wymagane wierzcho³ki. Oznacza to, ¿e potrzebnych ich jest 10 - bez punktu centalnego domu. W tym miejscu z niego korzystamy i nie ma sensu go dalej przekazywaæ
-    for(int i = 0; i < houseNum; i++)
-    {
-        posA = vec4(HouseCoord_CS_in_F[i].x, HouseCoord_CS_in_F[i].y, HouseCoord_CS_in_F[i].z, 1.0);
-        posB = vec4(HouseCoord_CS_in_S[i].x, HouseCoord_CS_in_S[i].y, HouseCoord_CS_in_S[i].z, 1.0);
-
-        houseX = posA.x-posB.x;
-	    houseY = posA.y-posB.y;
-        houseWallH = HouseCoord_CS_in_S[i].w;
-
-        posBp = vec4(posA.x - houseX, posA.y - houseY, posA.z, 1.0);
-        posC = vec4(posA.x - houseX, posB.y, posA.z, 1.0);
-        posCp = vec4(posB.x, posA.y - houseY, posA.z, 1.0);
-
-        posD = vec4(posB.x, posB.y, posB.z + houseWallH, 1.0);
-        posDp = vec4(posBp.x, posBp.y, posBp.z + houseWallH, 1.0);
-        posE = vec4(posC.x, posC.y, posC.z + houseWallH, 1.0);
-        posEp = vec4(posCp.x, posCp.y, posCp.z + houseWallH, 1.0);
-
-        posF = vec4(posA.x, posB.y, posA.z + 1.5*houseWallH, 1.0);
-        posFp = vec4(posA.x, posBp.y, posA.z + 1.5*houseWallH, 1.0);
-
-        gl_out[gl_InvocationID + (10*i) + 0].gl_Position = posB;
-        gl_out[gl_InvocationID + (10*i) + 1].gl_Position = posBp;
-        gl_out[gl_InvocationID + (10*i) + 2].gl_Position = posC;
-        gl_out[gl_InvocationID + (10*i) + 3].gl_Position = posCp;
-        gl_out[gl_InvocationID + (10*i) + 4].gl_Position = posD;
-        gl_out[gl_InvocationID + (10*i) + 5].gl_Position = posDp;
-        gl_out[gl_InvocationID + (10*i) + 6].gl_Position = posE;
-        gl_out[gl_InvocationID + (10*i) + 7].gl_Position = posEp;
-        gl_out[gl_InvocationID + (10*i) + 8].gl_Position = posF;
-        gl_out[gl_InvocationID + (10*i) + 9].gl_Position = posFp;
-    }
-    */
