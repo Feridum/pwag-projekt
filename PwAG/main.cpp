@@ -133,12 +133,12 @@ GLuint* terrainText = new GLuint[2];
 #define MAX_HOUSE_COUNTER		10
 #define HOUSE_QUANTITY			3
 #define HOUSE_COUNTER			min(HOUSE_QUANTITY,MAX_HOUSE_COUNTER)
-#define MIN_X					-1
-#define MAX_X					1
-#define MIN_Y					-1
-#define MAX_Y					1
+#define MIN_X					-0.8
+#define MAX_X					0.8
+#define MIN_Y					-0.8
+#define MAX_Y					0.8
 #define PROPORTION				0.2
-#define WALL_LENGTH				(abs(MIN_X) + abs(MAX_X))*PROPORTION*0.5
+#define WALL_LENGTH				(abs(MIN_X) + abs(MAX_X))*PROPORTION
 
 glm::vec3 posATab[HOUSE_COUNTER] = { glm::vec3(0.0, 0.0, 0.0) };
 float rand1Tab[HOUSE_COUNTER] = { 0 };
@@ -360,9 +360,9 @@ void makeHouse()
 		posATab[i].y = 0;
 		posATab[i].z = 0;
 	
-		rand1 = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 2.0));
+		rand1 = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 0.5));
 		rand1Tab[i] = rand1;
-		rand2 = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 3.0));
+		rand2 = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 0.4));
 		rand2Tab[i] = rand2;
 	}
 
@@ -379,7 +379,7 @@ void makeHouse()
 		{
 			colide = true;
 			failCounter = 0;
-			while (colide && failCounter < 30)
+			while (colide && failCounter < 50)
 			{
 				failCounter++;
 				colide = false;

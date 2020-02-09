@@ -32,11 +32,13 @@ void main()
 
     houseX = randoms1;
     houseX = (houseX <= 0.25 ? 0.25 : houseX);
+	houseX = (houseX >= 0.5 ? 0.5 : houseX);
     houseX = houseX * wallLength;
     //houseX_ES_in[gl_InvocationID] = houseX * wallLength;
 
     houseY = randoms2;
     houseY = (houseY <= 0.2 ? 0.2 : houseY);
+	houseY = (houseY >= 0.4 ? 0.4 : houseY);
     houseY = houseY * wallLength;
     //houseY_ES_in[gl_InvocationID] = houseY * wallLength;
 
@@ -49,10 +51,10 @@ void main()
     {
        gl_TessLevelInner[0] = 4.0;
        gl_TessLevelInner[1] = 4.0;
-       gl_TessLevelOuter[0] = 5.0;
-       gl_TessLevelOuter[1] = 5.0;
-       gl_TessLevelOuter[2] = 5.0;
-       gl_TessLevelOuter[3] = 5.0;
+       gl_TessLevelOuter[0] = 25.0;
+       gl_TessLevelOuter[1] = 25.0;
+       gl_TessLevelOuter[2] = 25.0;
+       gl_TessLevelOuter[3] = 25.0;
 
        //posA_ES_in[gl_InvocationID] = posA;
 

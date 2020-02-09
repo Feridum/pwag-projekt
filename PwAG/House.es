@@ -36,46 +36,56 @@ vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)
 1	5	9	13
 0	4	8	12
 */
-int checkPatch(float u, float v)
+vec3 checkPatch(float u, float v)
 {
 	int x = 0;
 	int y = 0;
 
+	float a, b;
+
 	if(u < 0.25)
 	{
 		x = 0;
+		a = u*4;
 	}
 	else if (u < 0.5)
 	{
 		x = 1;
+		a = (u-0.25)*4;
 	}
 	else if (u < 0.75)
 	{
 		x = 2;
+		a = (u-0.50)*4;
 	}
 	else
 	{
 		x = 3;
+		a = (u-0.75)*4;
 	}
 
 	if(v < 0.25)
 	{
 		y = 0;
+		b = u*4;
 	}
 	else if (v < 0.5)
 	{
 		y = 1;
+		b = (u-0.25)*4;
 	}
 	else if (v < 0.75)
 	{
 		y = 2;
+		b = (u-0.50)*4;
 	}
 	else
 	{
 		y = 3;
+		b = (u-0.75)*4;
 	}
 
-	return (x * 4 + y);
+	return vec3((x * 4 + y), a, b);
 }
 
 void main(){
@@ -101,7 +111,11 @@ void main(){
 	0	2
 	*/
 	int v0, v1, v2, v3;
-	our_patch = checkPatch(u, v);
+	vec3 answer = checkPatch(u, v);
+	our_patch = int(answer.x);
+	float a, b;
+	a = answer.y;
+	b = answer.z;
 	//our_patch = gl_PrimitiveID;
 	
 	if (our_patch < 4)
@@ -133,9 +147,13 @@ void main(){
 		v3 = 9 + our_patch;
 	}
 
-	vec4 p1 = mix(gl_in[v0].gl_Position, gl_in[v2].gl_Position, u);
-	vec4 p2 = mix(gl_in[v1].gl_Position, gl_in[v3].gl_Position, u);
-	vec4 pos = mix(p1, p2, v);
+	//vec4 p1 = mix(gl_in[v0].gl_Position, gl_in[v2].gl_Position, u);
+	//vec4 p2 = mix(gl_in[v1].gl_Position, gl_in[v3].gl_Position, u);
+	//vec4 p1 = mix(gl_in[0].gl_Position, gl_in[20].gl_Position, a);
+	//vec4 p2 = mix(gl_in[4].gl_Position, gl_in[24].gl_Position, a);
+	vec4 p1 = mix(gl_in[v0].gl_Position, gl_in[v2].gl_Position, a);
+	vec4 p2 = mix(gl_in[v1].gl_Position, gl_in[v3].gl_Position, a);
+	vec4 pos = mix(p1, p2, b);
 	HousePosition_FS_in = pos;
 	gl_Position = pos;
 
