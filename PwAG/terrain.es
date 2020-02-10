@@ -11,7 +11,7 @@ out vec3 WorldPos_FS_in;
 
 uniform mat4 view_matrix;
 
-uniform vec2 hill_centers[4];
+uniform vec2 hill_centers[5];
 uniform float hill_height;
 uniform float hill_radius;
 
@@ -34,15 +34,11 @@ double calculateHeight(double x, double z)
 {
 	double maxHeight = 0;
 
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < 5; i++){
 		double r2 = hill_radius * hill_radius; 
 		double x2x1 = hill_centers[i].x - x;
 		double y2y1 = hill_centers[i].y - z;
 		double height = double(r2 - x2x1 * x2x1 - y2y1 * y2y1);
-		
-		if(height < 0.0){
-			return 0.0;
-		}
 
 		double factor = height / r2;
 		height = hill_height * factor;
