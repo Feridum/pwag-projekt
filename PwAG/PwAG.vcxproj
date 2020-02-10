@@ -123,12 +123,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Heightmap.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="house.es" />
+    <None Include="house.fs" />
+    <None Include="house.tcs" />
+    <None Include="house.vs" />
     <None Include="subdiv.fs" />
     <None Include="subdiv.vs" />
     <None Include="subdiv_p.geom" />
+    <None Include="terrain.es" />
+    <None Include="terrain.tcs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Heightmap.hpp" />
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

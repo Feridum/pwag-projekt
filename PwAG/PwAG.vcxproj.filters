@@ -18,6 +18,9 @@
     <ClCompile Include="main.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="Heightmap.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="subdiv.fs">
@@ -29,5 +32,31 @@
     <None Include="subdiv_p.geom">
       <Filter>Pliki źródłowe</Filter>
     </None>
+    <None Include="terrain.es">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
+    <None Include="terrain.tcs">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
+    <None Include="house.es">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
+    <None Include="house.fs">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
+    <None Include="house.tcs">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
+    <None Include="house.vs">
+      <Filter>Pliki źródłowe</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stb_image.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="Heightmap.hpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
