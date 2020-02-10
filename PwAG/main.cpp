@@ -24,7 +24,7 @@
 #define HOUSE_COUNTER			min(HOUSE_QUANTITY,MAX_HOUSE_COUNTER)
 #define MIN_X					-0.9
 #define MAX_X					0.9
-#define MIN_Y					-0.9
+#define MIN_Y					0
 #define MAX_Y					0.9
 #define PROPORTION				0.2
 #define WALL_LENGTH				(abs(MIN_X) + abs(MAX_X))*PROPORTION
@@ -112,19 +112,19 @@ char* readShader(const char* aShaderFile)
 
 //To jest do glLookAt
 GLdouble eyex = 0;
-GLdouble eyey = 0;
-GLdouble eyez = 0;
+GLdouble eyey = 2;
+GLdouble eyez = 1;
 
-GLdouble centerx = 6;
-GLdouble centery = 77;
-GLdouble centerz = 100;
+GLdouble centerx = 0;
+GLdouble centery = 0;
+GLdouble centerz = 0;
 
 //change also in terrain.es file
-int numHills = 4;
+int numHills = 5;
 float hillRadiusMin = 0.3;
 float hillRadiusMax = 0.4;
-float hillMinHeight = 0.4;
-float hillMaxHeight = 0.5;
+float hillMinHeight = 0.6;
+float hillMaxHeight = 0.8;
 
 static GLint centers;
 static GLint height; 
@@ -737,7 +737,10 @@ void setUniformHouse() {
 void drawScene(void)
 {
 	// Clear screen to background color.
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);
 	glClear(GL_COLOR_BUFFER_BIT);
+
 
 	// Set foreground (or drawing) color.
 	glColor3f(0.0, 0.0, 0.0);
@@ -748,17 +751,17 @@ void drawScene(void)
 	cameraPos = glm::vec3(eyex, eyey, eyez);
 	cameraTarget = glm::vec3(centerx, centery, centerz);
 	glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
-	
+	glm::mat4 proj = glm::perspective(-130.0f, 500.0f/500.0f, 0.1f, 100.0f);
 
 
 	glUseProgram(terrainProgramHandle);
-	glUniformMatrix4fv(viewMatrixTerrain, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(viewMatrixTerrain, 1, GL_FALSE, glm::value_ptr(proj * view));
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
 	drawTerrain();
 	
 	glUseProgram(houseProgramHandle);
 	glPatchParameteri(GL_PATCH_VERTICES, 4);
-	glUniformMatrix4fv(viewMatrixHouse, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(viewMatrixHouse, 1, GL_FALSE, glm::value_ptr(proj * view));
 	drawHouses();
 
 	// Flush created objects to the screen, i.e., force rendering.
@@ -774,7 +777,6 @@ void setup(void)
 	// Set background (or clearing) color.
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 
-
 }
 
 // OpenGL window reshape routine.
@@ -784,20 +786,20 @@ void resize(int w, int h)
 	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
 
 	// Set matrix mode to projection.
-	glMatrixMode(GL_PROJECTION);
+	//glMatrixMode(GL_PROJECTION);
 
 	// Clear current projection matrix to identity.
-	glLoadIdentity();
+	//glLoadIdentity();
 
 	// Specify the orthographic (or perpendicular) projection, 
 	// i.e., define the viewing box.
-	gluPerspective(-60, w / h, -100, 1000);
+	//gluPerspective(-60, w / h, -100, 1000);
 	//glFrustum(-10.0, 10.0, -10.0, 10.0, 0.0, 200.0);
 	// Set matrix mode to modelview.
-	glMatrixMode(GL_MODELVIEW);
+	//glMatrixMode(GL_MODELVIEW);
 
 	// Clear current modelview matrix to identity.
-	glLoadIdentity();
+	//glLoadIdentity();
 	drawScene();
 }
 
@@ -853,6 +855,36 @@ void Keyboard(unsigned char key, int x, int y)
 	else if (key == 's') {
 		eyez += 0.05;
 	}
+	else if (key == 'a') {
+		eyey -= 0.05;
+	}
+	else if (key == 'd') {
+		eyey += 0.05;
+	}
+	else if (key == 'q') {
+		eyex -= 0.05;
+	}
+	else if (key == 'e') {
+		eyex += 0.05;
+	}
+	else if (key == 'i') {
+		centerz -= 0.05;
+	}
+	else if (key == 'k') {
+		centerz += 0.05;
+	}
+	else if (key == 'j') {
+		centery -= 0.05;
+	}
+	else if (key == 'l') {
+		centery += 0.05;
+	}
+	else if (key == 'u') {
+		centerx -= 0.05;
+	}
+	else if (key == 'o') {
+		centerx += 0.05;
+	}
 
 	// odrysowanie okna
 	resize(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
@@ -860,7 +892,7 @@ void Keyboard(unsigned char key, int x, int y)
 
 void SpecialKeys(int key, int x, int y) //funkcja obsługi klawiatury
 {
-	GLfloat cameraSpeed = 1;
+	GLfloat cameraSpeed = 0.1;
 	switch (key)
 	{
 		// kursor w lewo
@@ -869,7 +901,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obsługi klawiatury
 		LDx -= 0.1;
 		PGx -= 0.1;
 		PDx -= 0.1;*/
-		//eyex -= cameraSpeed;
+		eyex -= cameraSpeed;
 		centerx -= cameraSpeed;
 		break;
 
@@ -879,7 +911,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obsługi klawiatury
 		LDy -= 0.1;
 		PGy -= 0.1;
 		PDy -= 0.1;*/
-		//eyey += cameraSpeed;
+		eyey += cameraSpeed;
 		centery += cameraSpeed;
 		break;
 
@@ -889,7 +921,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obsługi klawiatury
 		LDx += 0.1;
 		PGx += 0.1;
 		PDx += 0.1;*/
-		//eyex += cameraSpeed;
+		eyex += cameraSpeed;
 		centerx += cameraSpeed;
 		break;
 
@@ -899,7 +931,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obsługi klawiatury
 		LDy += 0.1;
 		PGy += 0.1;
 		PDy += 0.1;*/
-		//eyey -= cameraSpeed;
+		eyey -= cameraSpeed;
 		centery -= cameraSpeed;
 		break;
 	}
@@ -917,15 +949,15 @@ int main(int argc, char** argv)
 	uniform_real_distribution<float> hillRadiusDistribution(hillRadiusMin, hillRadiusMax);
 	uniform_real_distribution<float> hillHeightDistribution(hillMinHeight, hillMaxHeight);
 	//the same as coordinates of terrain
-	uniform_real_distribution<float> hillCenterRowIntDistribution(-0.2, 0.6);
-	uniform_real_distribution<float> hillCenterColIntDistribution(-0.0, 0.8);
+	uniform_real_distribution<float> hillCenterXIntDistribution(-0.6, 0.6);
+	uniform_real_distribution<float> hillCenterZIntDistribution(0.2, 0.5);
 	float x;
 	float y;
 	for (int i = 0; i < numHills*2; i=i+2) {
-		do {
-			x = hillCenterRowIntDistribution(generator);
-			y = hillCenterColIntDistribution(generator);
-		} while (x * x + y * y < 0.5);
+
+		x = hillCenterXIntDistribution(generator);
+		y = hillCenterZIntDistribution(generator) - 1;
+
 
 		hillsCenters[i] = x;
 		hillsCenters[i+1] = y;
@@ -936,6 +968,7 @@ int main(int argc, char** argv)
 
 	// Initialize GLUT.
 	glutInit(&argc, argv);
+	
 
 	// Set display mode as single-buffered and RGB color.
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
