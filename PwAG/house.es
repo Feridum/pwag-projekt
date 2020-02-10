@@ -132,15 +132,15 @@ vec4 makeRoof(int v0)
 			b = v - 0.5;
 			b = b*4;
 
-			if	(a<b)		//7-12-8
+			if	((1-a) > b)	//7-12-8
 			{
-				p1 = mix(gl_in[7].gl_Position, gl_in[12].gl_Position, a);
-				pos = mix(p1, gl_in[8].gl_Position, b);
+				p1 = mix(gl_in[7].gl_Position, gl_in[8].gl_Position, b);
+				pos = mix(p1, gl_in[12].gl_Position, a);
 			}
 			else			//8-12-13
 			{
-				p1 = mix(gl_in[12].gl_Position, gl_in[13].gl_Position, b);
-				pos = mix(gl_in[8].gl_Position, p1, a);
+				p1 = mix(gl_in[8].gl_Position, gl_in[13].gl_Position, a);
+				pos = mix(p1, gl_in[12].gl_Position, (1-b));
 			}
 			break;
 
@@ -151,15 +151,15 @@ vec4 makeRoof(int v0)
 			b = v - 0.25;
 			b = b*4;
 
-			if (a < b)		//11-16-12
+			if ((1-a) > b)		//11-16-12
 			{
-				p1 = mix(gl_in[11].gl_Position, gl_in[16].gl_Position, a);
+				p1 = mix(gl_in[16].gl_Position, gl_in[11].gl_Position, (1-a));
 				pos = mix(p1, gl_in[12].gl_Position, b);
 			}
 			else			//12-16-17
 			{
 				p1 = mix(gl_in[16].gl_Position, gl_in[17].gl_Position, b);
-				pos = mix(gl_in[12].gl_Position, p1, a);
+				pos = mix(p1, gl_in[12].gl_Position, (1-a));
 			}
 			break;
 
@@ -172,13 +172,13 @@ vec4 makeRoof(int v0)
 
 			if (a > b)		//12-17-18
 			{	
-				p1 = mix(gl_in[12].gl_Position, gl_in[17].gl_Position, a);
-				pos = mix(p1, gl_in[18].gl_Position, b);
+				p1 = mix(gl_in[17].gl_Position, gl_in[18].gl_Position, b);
+				pos = mix(p1, gl_in[12].gl_Position, (1-a));
 			}
 			else			//12-18-13
 			{
-				p1 = mix(gl_in[12].gl_Position, gl_in[13].gl_Position, b);
-				pos = mix(p1, gl_in[18].gl_Position, a);
+				p1 = mix(gl_in[13].gl_Position, gl_in[18].gl_Position, a);
+				pos = mix(p1, gl_in[12].gl_Position, (1-b));
 			}
 			break;
 

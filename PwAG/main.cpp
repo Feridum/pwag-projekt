@@ -634,6 +634,8 @@ void drawTerrain() {
 	glUniform1i(glGetUniformLocation(programHandle, "texture2"), 1);
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
 
+	glCullFace(GL_FRONT_AND_BACK);
+
 	for (int i = 0; i < HOUSE_COUNTER; i++)
 	{
 		renderHouse(i);

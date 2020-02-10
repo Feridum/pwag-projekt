@@ -25,7 +25,7 @@ uniform float Zvalue;
 #define VX x
 #define VY z
 #define VZ y
-#define ROOF 1.5
+#define ROOF 2
 
 void main()
 {

@@ -24,6 +24,8 @@ void main()
 	else
 	{
 		FragColor = texel0;	//grass -> roof
+
+		//FragColor = vec4(1.0, 0.0, 0.0, 1.0); 
 	}
 	//FragColor = mix(texel0, texel1, 0.3);
 
