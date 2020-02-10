@@ -4,9 +4,6 @@ out vec4 FragColor;
 in vec2 TexGeoCoord_FS_in;
 in float Heigth_FS_in;
 
-uniform float wallH;
-uniform float Zvalue;
-
 // texture sampler
 uniform sampler2D soil;
 uniform sampler2D grass;

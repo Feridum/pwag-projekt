@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_DEPRECATE
+ï»¿#define _CRT_SECURE_NO_DEPRECATE
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -34,19 +34,15 @@ using namespace std;
 void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, const char* geom, const char* tcs, const char* es);
 
 //static int programHandle; // obiekt programu
-int programHandle; // obiekt programu
-static int vertexShaderHandle; // obiekt shadera wierzcho³ków
-static int fragmentShaderHandle; // obiekt shadera fragmentów
-static int geomShaderHandle; // obiekt shadera geometrii
-static int tcsShaderHandle; // obiekt shadera geometrii
-static int esShaderHandle; // obiekt shadera geometrii
+int houseProgramHandle; // obiekt programu
+int terrainProgramHandle; 
 
 glm::vec3 posATab[HOUSE_COUNTER] = { glm::vec3(0.0, 0.0, 0.0) };
 float rand1Tab[HOUSE_COUNTER] = { 0 };
 float rand2Tab[HOUSE_COUNTER] = { 0 };
 
-//GLuint* terrainText = new GLuint[5];													TWOJE
-GLuint* terrainText = new GLuint[2];
+GLuint* terrainText = new GLuint[5];
+GLuint* houseText = new GLuint[2];
 
 unsigned int texture1;
 unsigned int texture2;
@@ -56,7 +52,8 @@ bool firstShader = true;
 GLuint vbo_id[2];
 GLfloat xyz[20 * 3][3] = { 0 };
 
-static GLint viewMatrix;
+static GLint viewMatrixTerrain;
+static GLint viewMatrixHouse;
 static GLint wallLLocation;
 static GLint randLocation1;
 static GLint randLocation2;
@@ -65,7 +62,7 @@ static GLint ZLocation;
 static GLint posAXLocation;
 static GLint posAYLocation;
 
-//wskaŸniki funkcji
+//wskaÅºniki funkcji
 PFNGLCREATEPROGRAMPROC glCreateProgram = NULL;
 PFNGLDELETEPROGRAMPROC glDeleteProgram = NULL;
 PFNGLCREATESHADERPROC glCreateShader = NULL;
@@ -162,8 +159,8 @@ static GLfloat vdata[6][5] = {
 };
 
 /*
-	Funkcja, która przypisuje wartoœci punktu we wskazane miejsce w tablicy domków. Bez tego funkcja createHouses() by³aby BARDZO d³uga...
-	Jako pola 4 i 5 ([][3], [][4]) wpisuje wartoœci wspó³rzêdnych tekstury (kombinacja 0 i 1)
+	Funkcja, ktÃ³ra przypisuje wartoÅ›ci punktu we wskazane miejsce w tablicy domkÃ³w. Bez tego funkcja createHouses() byÅ‚aby BARDZO dÅ‚uga...
+	Jako pola 4 i 5 ([][3], [][4]) wpisuje wartoÅ›ci wspÃ³Å‚rzÄ™dnych tekstury (kombinacja 0 i 1)
 */
 void copyPoint(int i, int j, int t, glm::vec3 Point)
 {
@@ -207,16 +204,16 @@ void copyPoint(int i, int j, int t, glm::vec3 Point)
 
 void renderHouse(int i)
 {
-	wallLLocation = glGetUniformLocation(programHandle, "wallLength");
-	randLocation1 = glGetUniformLocation(programHandle, "randoms1");
-	randLocation2 = glGetUniformLocation(programHandle, "randoms2");
-	wallHLocation = glGetUniformLocation(programHandle, "wallH");
-	ZLocation = glGetUniformLocation(programHandle, "Zvalue");
-	posAXLocation = glGetUniformLocation(programHandle, "vertexAX");
-	posAYLocation = glGetUniformLocation(programHandle, "vertexAY");
+	wallLLocation = glGetUniformLocation(houseProgramHandle, "wallLength");
+	randLocation1 = glGetUniformLocation(houseProgramHandle, "randoms1");
+	randLocation2 = glGetUniformLocation(houseProgramHandle, "randoms2");
+	wallHLocation = glGetUniformLocation(houseProgramHandle, "wallH");
+	ZLocation = glGetUniformLocation(houseProgramHandle, "Zvalue");
+	posAXLocation = glGetUniformLocation(houseProgramHandle, "vertexAX");
+	posAYLocation = glGetUniformLocation(houseProgramHandle, "vertexAY");
 
 	srand(time(NULL));
-	glUseProgram(programHandle);
+	glUseProgram(houseProgramHandle);
 	glUniform1f(wallHLocation, wallHeight);
 	glUniform1f(ZLocation, Z);
 	glUniform1f(wallLLocation, WALL_LENGTH);
@@ -237,7 +234,7 @@ void renderHouse(int i)
 	glUniform1f(posAXLocation, posA.x);
 	glUniform1f(posAYLocation, posA.y);
 
-	//singleHouse: mamy 4 wierzcho³ki, pierwszy z nich jest oddalony od punktu A o -1, -1 (x-1, y-1)
+	//singleHouse: mamy 4 wierzchoÅ‚ki, pierwszy z nich jest oddalony od punktu A o -1, -1 (x-1, y-1)
 
 	singleHouse[0][0] = posA.x - 1.0;
 	singleHouse[0][1] = posA.y - 1.0;
@@ -263,7 +260,7 @@ void renderHouse(int i)
 	singleHouse[3][3] = 1.0;
 	singleHouse[3][4] = 1.0;
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(singleHouse), singleHouse, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
@@ -304,8 +301,8 @@ void makeHouse()
 		posA.y = MIN_Y + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_Y) + abs(MIN_Y))));
 		posA.z = Z;
 
-		//je¿eli mamy ju¿ jakieœ punkty A, to musimy sprawdziæ, czy nie le¿¹ za blisko siebie - czy zbudowane na nich domki nie bêd¹ na siebie nachodziæ
-		if (posATab[0].x != 0 || posATab[0].y != 0 || posATab[0].z != 0)		//jeœli tak, to znaczy, ¿e mamy ju¿ jakieœ domki
+		//jeÅ¼eli mamy juÅ¼ jakieÅ› punkty A, to musimy sprawdziÄ‡, czy nie leÅ¼Ä… za blisko siebie - czy zbudowane na nich domki nie bÄ™dÄ… na siebie nachodziÄ‡
+		if (posATab[0].x != 0 || posATab[0].y != 0 || posATab[0].z != 0)		//jeÅ›li tak, to znaczy, Å¼e mamy juÅ¼ jakieÅ› domki
 		{
 			colide = true;
 			failCounter = 0;
@@ -346,12 +343,12 @@ void makeHouse()
 }
 
 /*
-	Aby wygenerowaæ domki nale¿y przes³aæ pewn¹ iloœæ wierzcho³ków do potoku graficznego
-	Domek posiada 10 wierzcho³ków, które buduj¹ jego szkielet oraz jedynasty - punkt œrodkowy, potrzebny do okreœlenia po³o¿enia pozosta³ych wierzcho³ków
-	Jednak¿e œciany bêd¹ zbudowane z trójk¹tów, a trójk¹ty bêdziemy wykorzystywaæ przy renderowaniu. Z tego te¿ powodu wysy³amy:
-	(3+3)*6 + 3 + 3 = 42 wierzcho³ki na domek.
+	Aby wygenerowaÄ‡ domki naleÅ¼y przesÅ‚aÄ‡ pewnÄ… iloÅ›Ä‡ wierzchoÅ‚kÃ³w do potoku graficznego
+	Domek posiada 10 wierzchoÅ‚kÃ³w, ktÃ³re budujÄ… jego szkielet oraz jedynasty - punkt Å›rodkowy, potrzebny do okreÅ›lenia poÅ‚oÅ¼enia pozostaÅ‚ych wierzchoÅ‚kÃ³w
+	JednakÅ¼e Å›ciany bÄ™dÄ… zbudowane z trÃ³jkÄ…tÃ³w, a trÃ³jkÄ…ty bÄ™dziemy wykorzystywaÄ‡ przy renderowaniu. Z tego teÅ¼ powodu wysyÅ‚amy:
+	(3+3)*6 + 3 + 3 = 42 wierzchoÅ‚ki na domek.
 
-	Potrzebne bêdzie wylosowanie 5 liczb (przy za³o¿eniu, ¿e domki bêd¹ le¿a³y na jednej wysokoœci): wartoœci x,y dla punktu centalnego - A, wartoœci x,y dla jednego wierzcho³ka podstawy - B oraz wartoœci wysokoœci œciany domku.
+	Potrzebne bÄ™dzie wylosowanie 5 liczb (przy zaÅ‚oÅ¼eniu, Å¼e domki bÄ™dÄ… leÅ¼aÅ‚y na jednej wysokoÅ›ci): wartoÅ›ci x,y dla punktu centalnego - A, wartoÅ›ci x,y dla jednego wierzchoÅ‚ka podstawy - B oraz wartoÅ›ci wysokoÅ›ci Å›ciany domku.
 */
 void createHouses()
 {
@@ -381,8 +378,8 @@ void createHouses()
 		posA.y = MIN_Y + (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (abs(MAX_Y) + abs(MIN_Y))));
 		posA.z = Z;
 
-		//je¿eli mamy ju¿ jakieœ punkty A, to musimy sprawdziæ, czy nie le¿¹ za blisko siebie - czy zbudowane na nich domki nie bêd¹ na siebie nachodziæ
-		if (posATab[0].x != 0 || posATab[0].y != 0 || posATab[0].z != 0)		//jeœli tak, to znaczy, ¿e mamy ju¿ jakieœ domki
+		//jeÅ¼eli mamy juÅ¼ jakieÅ› punkty A, to musimy sprawdziÄ‡, czy nie leÅ¼Ä… za blisko siebie - czy zbudowane na nich domki nie bÄ™dÄ… na siebie nachodziÄ‡
+		if (posATab[0].x != 0 || posATab[0].y != 0 || posATab[0].z != 0)		//jeÅ›li tak, to znaczy, Å¼e mamy juÅ¼ jakieÅ› domki
 		{
 			colide = true;
 			failCounter = 0;
@@ -415,16 +412,16 @@ void createHouses()
 		}
 		else
 		{
-			//teraz mamy ju¿ pewnoœæ, ¿e zbudowane domki nie bêd¹ na siebie nachodziæ
+			//teraz mamy juÅ¼ pewnoÅ›Ä‡, Å¼e zbudowane domki nie bÄ™dÄ… na siebie nachodziÄ‡
 			posATab[i].x = posA.x;
 			posATab[i].y = posA.y;
 			posATab[i].z = posA.z;
 
 			//houseX = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 2.0));
 			houseX = (max((float)0.4, (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 1.5))))* (float)WALL_LENGTH;
-			posB.x = posA.x + houseX;	//Punkt B w OSI X bêdzie oddalony od punktu A o wartoœæ <0.2-0.5> bazowej d³ugoœci œciany
+			posB.x = posA.x + houseX;	//Punkt B w OSI X bÄ™dzie oddalony od punktu A o wartoÅ›Ä‡ <0.2-0.5> bazowej dÅ‚ugoÅ›ci Å›ciany
 			houseY = (max((float)0.2, (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / 3.0))))* (float)WALL_LENGTH;
-			posB.y = posA.y + houseY;	//Punkt B w OSI Y bêdzie oddalony od punktu A o wartoœæ <0.1-0.25> bazowej d³ugoœci œciany
+			posB.y = posA.y + houseY;	//Punkt B w OSI Y bÄ™dzie oddalony od punktu A o wartoÅ›Ä‡ <0.1-0.25> bazowej dÅ‚ugoÅ›ci Å›ciany
 			posB.z = posA.z;
 
 			posBp.x = posA.x - houseX;
@@ -463,12 +460,12 @@ void createHouses()
 			posFp.y = posA.y - (0.8 * houseY);// posBp.y;
 			posFp.z = posA.z + 1.5 * wallHeight;
 
-			//teraz mamy ju¿ wszystkie wierzcho³ki domku. Pozosta³o po³¹czyæ je w trójk¹ty i odpowiednio wpakowaæ do tabeli
+			//teraz mamy juÅ¼ wszystkie wierzchoÅ‚ki domku. PozostaÅ‚o poÅ‚Ä…czyÄ‡ je w trÃ³jkÄ…ty i odpowiednio wpakowaÄ‡ do tabeli
 			/*
-				Trójk¹ty:
+				TrÃ³jkÄ…ty:
 
-			#0  BCB`		132		->jeœlibyœmy chcieli robiæ te¿ pod³ogê
-			#1  B`C`B		241		->jeœlibyœmy chcieli robiæ te¿ pod³ogê
+			#0  BCB`		132		->jeÅ›libyÅ›my chcieli robiÄ‡ teÅ¼ podÅ‚ogÄ™
+			#1  B`C`B		241		->jeÅ›libyÅ›my chcieli robiÄ‡ teÅ¼ podÅ‚ogÄ™
 
 			2  B`EC		273
 			3  D`EB`	672
@@ -544,7 +541,7 @@ void createHouses()
 			copyPoint(i, 41, 2, posF);
 		}
 	}
-	//skoñczono generowaæ domki
+	//skoÅ„czono generowaÄ‡ domki
 }
 
 void loadTerrain(GLuint texture, const char* textureFile) {
@@ -574,29 +571,23 @@ void loadTerrain(GLuint texture, const char* textureFile) {
 void terrain() {
 	glGenBuffers(2, vbo_id);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(vdata)	, vdata, GL_STATIC_DRAW);							TWOJE
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata), vdata, GL_STATIC_DRAW);
+	glGenTextures(3, terrainText);
+	loadTerrain(terrainText[0], "soil.jpg");
+	loadTerrain(terrainText[1], "grass.jpg");
+	loadTerrain(terrainText[2], "snow.jpg");
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(singleHouse), singleHouse, GL_STATIC_DRAW);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(vhouse), vhouse, GL_STATIC_DRAW);
-
-
-	//glGenTextures(5, terrainText);																	TWOJE
-	//loadTerrain(terrainText[0], "soil.jpg");															TWOJE
-	//loadTerrain(terrainText[1], "grass.jpg");															TWOJE
-	//loadTerrain(terrainText[2], "snow.jpg");															TWOJE
-	//loadTerrain(terrainText[3], "roof.jpg");
-	//loadTerrain(terrainText[4], "wallW.jpg");
-
-	glGenTextures(2, terrainText);
-	loadTerrain(terrainText[0], "roof.jpg");
-	loadTerrain(terrainText[1], "wallW.jpg");
+	glGenTextures(2, houseText);
+	loadTerrain(houseText[0], "roof.jpg");
+	loadTerrain(houseText[1], "wallW.jpg");
 }
 
 
 void drawTerrain() {
 
-	/*																									TWOJE
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
 	glEnableVertexAttribArray(0);
@@ -607,115 +598,72 @@ void drawTerrain() {
 
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "soil"), 0);
+	glUniform1i(glGetUniformLocation(terrainProgramHandle, "soil"), 0);
 	glBindTexture(GL_TEXTURE_2D, terrainText[0]);
 
 	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "grass"), 1);
+	glUniform1i(glGetUniformLocation(terrainProgramHandle, "grass"), 1);
 	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
-	
+
 
 	glActiveTexture(GL_TEXTURE2);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "snow"), 2);
+	glUniform1i(glGetUniformLocation(terrainProgramHandle, "snow"), 2);
 	glBindTexture(GL_TEXTURE_2D, terrainText[2]);
-	*/
-	//===============================================================
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[0]);
+
+	glDrawArrays(GL_PATCHES, 0, 6);
+
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+}
+
+void drawHouses() {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
 
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "texture1"), 0);
-	glBindTexture(GL_TEXTURE_2D, terrainText[0]);
+	glUniform1i(glGetUniformLocation(houseProgramHandle, "texture1"), 0);
+	glBindTexture(GL_TEXTURE_2D, houseText[0]);
 
 	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
-	glUniform1i(glGetUniformLocation(programHandle, "texture2"), 1);
-	glBindTexture(GL_TEXTURE_2D, terrainText[1]);
+	glUniform1i(glGetUniformLocation(houseProgramHandle, "texture2"), 1);
+	glBindTexture(GL_TEXTURE_2D, houseText[1]);
 
 	for (int i = 0; i < HOUSE_COUNTER; i++)
 	{
 		renderHouse(i);
 	}
-	//==============================================================
-
-	//terrain
-	//glDrawArrays(GL_PATCHES, 0, 6);																	TWOJE
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
-
-
-	//================================================================
-	//prze³¹czanie shaderów
-	//setShaders("house.vs", "house.fs", "subdiv_p.geom", "house.tcs", "house.es");
-
-	//glActiveTexture(GL_TEXTURE2);
-	//glEnable(GL_TEXTURE_2D);
-	//glUniform1i(glGetUniformLocation(programHandle, "texture3"), 3);
-	//glBindTexture(GL_TEXTURE_2D, terrainText[1]);
-
-	//glActiveTexture(GL_TEXTURE3);
-	//glEnable(GL_TEXTURE_2D);
-	//glUniform1i(glGetUniformLocation(programHandle, "texture4"), 4);
-	//glBindTexture(GL_TEXTURE_2D, terrainText[1]);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
-	//glEnableVertexAttribArray(2);
-
-	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)(3 * sizeof(GLfloat)));
-	//glEnableVertexAttribArray(3);
-
-
-	////houses
-	//glDrawArrays(GL_PATCHES, 0, 42 * HOUSE_COUNTER);
-
-	//glDisableVertexAttribArray(2);
-	//glDisableVertexAttribArray(3);
-
-	////=================================================================
-	//setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");
-
-
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, 0);
-	//glDisable(GL_TEXTURE_2D);
-
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, 0);
-	//glDisable(GL_TEXTURE_2D);
-
 }
 
-// incjalizacja shaderów
-void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, const char* geom, const char* tcs, const char* es)
+// incjalizacja shaderÃ³w
+void setShaders(int program, const char* vertexShaderFile, const char* fragmentShaderFile, const char* tcs, const char* es)
 {
 	GLint status = 0;
 
 	char* vertexShader = readShader(vertexShaderFile);
 	char* fragmentShader = readShader(fragmentShaderFile);
-	char* geomShader = readShader(geom);
 	char* tcsShader = readShader(tcs);
 	char* esShader = readShader(es);
 
-	programHandle = glCreateProgram(); // tworzenie obiektu programu
-	vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER); // shader wierzcho³ków
-	fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER); // shader fragmentów
-	geomShaderHandle = glCreateShader(GL_GEOMETRY_SHADER); // shader fragmentów
-	tcsShaderHandle = glCreateShader(GL_TESS_CONTROL_SHADER); // shader tcs
-	esShaderHandle = glCreateShader(GL_TESS_EVALUATION_SHADER); // shader es
+	 // tworzenie obiektu programu
+	static int vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER); // shader wierzchoÅ‚kÃ³w
+	static int fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER); // shader fragmentÃ³w
+	static int tcsShaderHandle = glCreateShader(GL_TESS_CONTROL_SHADER); // shader tcs
+	static int esShaderHandle = glCreateShader(GL_TESS_EVALUATION_SHADER); // shader es
 
-	glShaderSource(vertexShaderHandle, 1, (const char**)&vertexShader, NULL); // ustawianie Ÿród³a shadera wierzcho³ków
-	glShaderSource(fragmentShaderHandle, 1, (const char**)&fragmentShader, NULL); // ustawianie Ÿród³a shadera fragmentów
-	glShaderSource(tcsShaderHandle, 1, (const char**)&tcsShader, NULL); // ustawianie Ÿród³a shadera fragmentów
-	glShaderSource(esShaderHandle, 1, (const char**)&esShader, NULL); // ustawianie Ÿród³a shadera fragmentów
+	glShaderSource(vertexShaderHandle, 1, (const char**)&vertexShader, NULL); // ustawianie ÅºrÃ³dÅ‚a shadera wierzchoÅ‚kÃ³w
+	glShaderSource(fragmentShaderHandle, 1, (const char**)&fragmentShader, NULL); // ustawianie ÅºrÃ³dÅ‚a shadera fragmentÃ³w
+	glShaderSource(tcsShaderHandle, 1, (const char**)&tcsShader, NULL); // ustawianie ÅºrÃ³dÅ‚a shadera fragmentÃ³w
+	glShaderSource(esShaderHandle, 1, (const char**)&esShader, NULL); // ustawianie ÅºrÃ³dÅ‚a shadera fragmentÃ³w
 
-	// kompilacja shaderów
+	// kompilacja shaderÃ³w
 	glCompileShader(vertexShaderHandle);
 	glCompileShader(fragmentShaderHandle);
-	glCompileShader(geomShaderHandle);
 	glCompileShader(tcsShaderHandle);
 	glCompileShader(esShaderHandle);
 
@@ -739,36 +687,48 @@ void setShaders(const char* vertexShaderFile, const char* fragmentShaderFile, co
 	}
 
 
-	//dodanie shaderów do programu
-	glAttachShader(programHandle, vertexShaderHandle);
-	glAttachShader(programHandle, tcsShaderHandle);
-	glAttachShader(programHandle, esShaderHandle);
-	glAttachShader(programHandle, fragmentShaderHandle);
+	//dodanie shaderÃ³w do programu
+	glAttachShader(program, vertexShaderHandle);
+	glAttachShader(program, tcsShaderHandle);
+	glAttachShader(program, esShaderHandle);
+	glAttachShader(program, fragmentShaderHandle);
 
 	/* link */
 	//uruchomienie
-	glLinkProgram(programHandle);
+	glLinkProgram(program);
 
-	glGetObjectParameterivARB(programHandle, GL_OBJECT_LINK_STATUS_ARB, &status);
+	glGetObjectParameterivARB(program, GL_OBJECT_LINK_STATUS_ARB, &status);
 	if (!status) {
 		const int maxInfoLogSize = 2048;
 		GLchar infoLog[maxInfoLogSize];
-		glGetInfoLogARB(programHandle, maxInfoLogSize, NULL, infoLog);
+		glGetInfoLogARB(program, maxInfoLogSize, NULL, infoLog);
 		std::cout << infoLog;
 	}
 
-	viewMatrix = glGetUniformLocation(programHandle, "view_matrix");
-	centers = glGetUniformLocation(programHandle, "hill_centers");
-	height = glGetUniformLocation(programHandle, "hill_height");
-	radius = glGetUniformLocation(programHandle, "hill_radius");
+	
+}
 
-	GLint wallHLocation = glGetUniformLocation(programHandle, "wallH");
-	GLint ZLocation = glGetUniformLocation(programHandle, "Zvalue");
-	glUseProgram(programHandle);
+void setUniformTerrain() {
+	centers = glGetUniformLocation(terrainProgramHandle, "hill_centers");
+	height = glGetUniformLocation(terrainProgramHandle, "hill_height");
+	radius = glGetUniformLocation(terrainProgramHandle, "hill_radius");
+	viewMatrixTerrain = glGetUniformLocation(terrainProgramHandle, "view_matrix");
+
+	glUseProgram(terrainProgramHandle);
 	glUniform1f(wallHLocation, wallHeight);
 	glUniform2fv(centers, hillsCenters.size(), hillsCenters.data());
 	glUniform1f(height, hillHeight);
 	glUniform1f(radius, hillRadius);
+}
+
+void setUniformHouse() {
+	viewMatrixHouse = glGetUniformLocation(houseProgramHandle, "view_matrix");
+	GLint wallHLocation = glGetUniformLocation(houseProgramHandle, "wallH");
+	GLint ZLocation = glGetUniformLocation(houseProgramHandle, "Zvalue");
+
+	glUseProgram(houseProgramHandle);
+	glUniform1f(wallHLocation, wallHeight);
+	glUniform2fv(centers, hillsCenters.size(), hillsCenters.data());
 }
 
 // Drawing (display) routine.
@@ -783,18 +743,22 @@ void drawScene(void)
 	// Set polygon mode.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	//glPatchParameteri(GL_PATCH_VERTICES, 3);															TWOJE
-	glPatchParameteri(GL_PATCH_VERTICES, 4);
-
-	glUseProgram(programHandle);
 	cameraPos = glm::vec3(eyex, eyey, eyez);
 	cameraTarget = glm::vec3(centerx, centery, centerz);
 	glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
-	glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(view));
-
 	
+
+
+	glUseProgram(terrainProgramHandle);
+	glUniformMatrix4fv(viewMatrixTerrain, 1, GL_FALSE, glm::value_ptr(view));
+	glPatchParameteri(GL_PATCH_VERTICES, 3);
 	drawTerrain();
 	
+	glUseProgram(houseProgramHandle);
+	glPatchParameteri(GL_PATCH_VERTICES, 4);
+	glUniformMatrix4fv(viewMatrixHouse, 1, GL_FALSE, glm::value_ptr(view));
+	drawHouses();
+
 	// Flush created objects to the screen, i.e., force rendering.
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -825,7 +789,7 @@ void resize(int w, int h)
 
 	// Specify the orthographic (or perpendicular) projection, 
 	// i.e., define the viewing box.
-	gluPerspective(-60, w / h, 0.1, 1000);
+	gluPerspective(-60, w / h, -100, 1000);
 	//glFrustum(-10.0, 10.0, -10.0, 10.0, 0.0, 200.0);
 	// Set matrix mode to modelview.
 	glMatrixMode(GL_MODELVIEW);
@@ -892,7 +856,7 @@ void Keyboard(unsigned char key, int x, int y)
 	resize(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
 }
 
-void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
+void SpecialKeys(int key, int x, int y) //funkcja obsÅ‚ugi klawiatury
 {
 	GLfloat cameraSpeed = 1;
 	switch (key)
@@ -907,7 +871,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		centerx -= cameraSpeed;
 		break;
 
-		// kursor w górê
+		// kursor w gÃ³rÄ™
 	case GLUT_KEY_UP:
 		/*LGy -= 0.1;
 		LDy -= 0.1;
@@ -927,7 +891,7 @@ void SpecialKeys(int key, int x, int y) //funkcja obs³ugi klawiatury
 		centerx += cameraSpeed;
 		break;
 
-		// kursor w dó³
+		// kursor w dÃ³Å‚
 	case GLUT_KEY_DOWN:
 		/*LGy += 0.1;
 		LDy += 0.1;
@@ -997,8 +961,13 @@ int main(int argc, char** argv)
 	glutSpecialFunc(SpecialKeys);
 	glutKeyboardFunc(Keyboard);
 
-	//setShaders("subdiv.vs", "subdiv.fs", "subdiv_p.geom", "terrain.tcs", "terrain.es");										TWOJE
-	setShaders("house.vs", "house.fs", "subdiv_p.geom", "house.tcs", "house.es");
+	houseProgramHandle = glCreateProgram();
+	terrainProgramHandle = glCreateProgram();
+	setShaders(terrainProgramHandle, "subdiv.vs", "subdiv.fs", "terrain.tcs", "terrain.es");								
+	setShaders(houseProgramHandle, "house.vs", "house.fs", "house.tcs", "house.es");
+
+	setUniformHouse();
+	setUniformTerrain();
 
 	// Begin processing.
 	glutMainLoop();
