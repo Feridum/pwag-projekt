@@ -10,6 +10,7 @@ in vec3 WorldPos_ES_in[];
 //in vec4 posA_ES_in[];
 
 //uniform float wallH;
+uniform mat4 view_matrix;
 
 
 out vec2 TexGeoCoord_FS_in;
@@ -67,26 +68,132 @@ vec3 checkPatch(float u, float v)
 	if(v < 0.25)
 	{
 		y = 0;
-		b = u*4;
+		b = v*4;
 	}
 	else if (v < 0.5)
 	{
 		y = 1;
-		b = (u-0.25)*4;
+		b = (v-0.25)*4;
 	}
 	else if (v < 0.75)
 	{
 		y = 2;
-		b = (u-0.50)*4;
+		b = (v-0.50)*4;
 	}
 	else
 	{
 		y = 3;
-		b = (u-0.75)*4;
+		b = (v-0.75)*4;
 	}
 
 	return vec3((x * 4 + y), a, b);
 }
+
+
+
+/*	podajemy V0 - lewy dolny róg 
+	Ca³y problem polega na 4 fragmentach twaorz¹cych dach. Powinny siê one podzeliæ na dwa trójk¹ty i np. w przypadku ³atki 6-7-11-12 powinniœmy interpolowaæ pozycjê wed³ug 6-11-12 oraz 6-12-7. 
+	W pierwszym kroku nale¿y okreœliæ, w której po³ówce ³atki siê znajdujemy. Pomog¹ tutaj wartoœci UV (6[0.25, 0.25], 7 [0.25, 0.5], 11[0.5, 0.25], 12[0.5, 0.5])
+*/
+vec4 makeRoof(int v0)
+{
+	float u = gl_TessCoord.x;
+	float v = gl_TessCoord.y;
+
+	float a, b;
+	vec4 p1, p2;
+	vec4 pos = vec4(0,0,0,1);
+	switch (v0)
+	{
+		case 6:
+			a = u - 0.25;
+			a = a*4;
+
+			b = v - 0.25;
+			b = b*4;
+
+			if (a > b)		//6-11-12
+			{
+				p1 = mix(gl_in[6].gl_Position, gl_in[11].gl_Position, a);
+				pos = mix(p1, gl_in[12].gl_Position, b);
+
+			}
+			else			//6-12-7
+			{
+				p1 = mix(gl_in[6].gl_Position, gl_in[7].gl_Position, b);
+				pos = mix(p1, gl_in[12].gl_Position, a);
+			}
+			break;
+
+		case 7:
+			a = u - 0.25;
+			a = a*4;
+
+			b = v - 0.5;
+			b = b*4;
+
+			if	(a<b)		//7-12-8
+			{
+				p1 = mix(gl_in[7].gl_Position, gl_in[12].gl_Position, a);
+				pos = mix(p1, gl_in[8].gl_Position, b);
+			}
+			else			//8-12-13
+			{
+				p1 = mix(gl_in[12].gl_Position, gl_in[13].gl_Position, b);
+				pos = mix(gl_in[8].gl_Position, p1, a);
+			}
+			break;
+
+		case 11:
+			a = u - 0.5;
+			a = a*4;
+
+			b = v - 0.25;
+			b = b*4;
+
+			if (a < b)		//11-16-12
+			{
+				p1 = mix(gl_in[11].gl_Position, gl_in[16].gl_Position, a);
+				pos = mix(p1, gl_in[12].gl_Position, b);
+			}
+			else			//12-16-17
+			{
+				p1 = mix(gl_in[16].gl_Position, gl_in[17].gl_Position, b);
+				pos = mix(gl_in[12].gl_Position, p1, a);
+			}
+			break;
+
+		case 12:
+			a = u - 0.5;
+			a = a*4;
+
+			b = v - 0.5;
+			b = b*4;
+
+			if (a > b)		//12-17-18
+			{	
+				p1 = mix(gl_in[12].gl_Position, gl_in[17].gl_Position, a);
+				pos = mix(p1, gl_in[18].gl_Position, b);
+			}
+			else			//12-18-13
+			{
+				p1 = mix(gl_in[12].gl_Position, gl_in[13].gl_Position, b);
+				pos = mix(p1, gl_in[18].gl_Position, a);
+			}
+			break;
+
+		default:
+			//nigdy nei pwoienien siê tu znaleŸæ ¿aden punkt
+			break;
+	}
+
+	return pos;
+}
+
+
+
+
+
 
 void main(){
 
@@ -110,6 +217,7 @@ void main(){
 	1	3
 	0	2
 	*/
+	
 	int v0, v1, v2, v3;
 	vec3 answer = checkPatch(u, v);
 	our_patch = int(answer.x);
@@ -146,16 +254,37 @@ void main(){
 		v2 = 8 + our_patch;
 		v3 = 9 + our_patch;
 	}
-
+	
 	//vec4 p1 = mix(gl_in[v0].gl_Position, gl_in[v2].gl_Position, u);
 	//vec4 p2 = mix(gl_in[v1].gl_Position, gl_in[v3].gl_Position, u);
 	//vec4 p1 = mix(gl_in[0].gl_Position, gl_in[20].gl_Position, a);
 	//vec4 p2 = mix(gl_in[4].gl_Position, gl_in[24].gl_Position, a);
-	vec4 p1 = mix(gl_in[v0].gl_Position, gl_in[v2].gl_Position, a);
-	vec4 p2 = mix(gl_in[v1].gl_Position, gl_in[v3].gl_Position, a);
-	vec4 pos = mix(p1, p2, b);
+	//vec4 p1 = mix(gl_in[v0].gl_Position, gl_in[v2].gl_Position, a);
+	//vec4 p2 = mix(gl_in[v1].gl_Position, gl_in[v3].gl_Position, a);
+	//vec4 p1 = mix(gl_in[0].gl_Position, gl_in[2].gl_Position, u);
+	//vec4 p2 = mix(gl_in[1].gl_Position, gl_in[3].gl_Position, u);
+	//vec4 pos = mix(p1, p2, b);
+	//vec4 pos = mix(p1, p2, v);
+
+
+
+	//Najlepsza kombinacja:
+	vec4 p1;
+	vec4 p2;
+	vec4 pos;
+	if (v0 != 6 && v0 != 7 && v0 != 11 && v0 != 12)
+	{
+		p1 = mix(gl_in[v0].gl_Position, gl_in[v2].gl_Position, a);
+		p2 = mix(gl_in[v1].gl_Position, gl_in[v3].gl_Position, a);	
+		pos = mix(p1, p2, b);
+	}
+	else
+	{
+		pos = makeRoof(v0);
+	}
+
 	HousePosition_FS_in = pos;
-	gl_Position = pos;						//tutaj nei wiem czy nie powinniœmy u¿yæ viewMatrix'a
+	gl_Position = view_matrix * pos;						//tutaj nei wiem czy nie powinniœmy u¿yæ viewMatrix'a
 
 }
 

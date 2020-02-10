@@ -22,6 +22,11 @@ uniform float vertexAY;
 uniform float wallH;
 uniform float Zvalue;
 
+#define VX x
+#define VY z
+#define VZ y
+#define ROOF 1.5
+
 void main()
 {
     // Set the control points of the output patch
@@ -51,10 +56,10 @@ void main()
     {
        gl_TessLevelInner[0] = 4.0;
        gl_TessLevelInner[1] = 4.0;
-       gl_TessLevelOuter[0] = 25.0;
-       gl_TessLevelOuter[1] = 25.0;
-       gl_TessLevelOuter[2] = 25.0;
-       gl_TessLevelOuter[3] = 25.0;
+       gl_TessLevelOuter[0] = 5.0;
+       gl_TessLevelOuter[1] = 5.0;
+       gl_TessLevelOuter[2] = 5.0;
+       gl_TessLevelOuter[3] = 5.0;
 
        //posA_ES_in[gl_InvocationID] = posA;
 
@@ -87,6 +92,358 @@ void main()
 	*/
 
 	vec4 pos = vec4(1.0, 1.0, 1.0, 1.0);
+
+
+
+	
+	switch(gl_InvocationID)
+	{
+		case 0:								//punkt B
+			pos.VX = posA.x + houseX;
+			pos.VY = posA.y + houseY;
+			pos.VZ = posA.z;
+			break;
+
+		case 1:	// 1/4 dystansu miêdzy B i Cp
+			pos.VX = posA.x + houseX;
+			pos.VY = posA.y + (0.5 * houseY);
+			pos.VZ = posA.z;
+			break;
+
+		case 2:	// 2/4 dystansu miêdzy B i Cp
+			pos.VX = posA.x + houseX;
+			pos.VY = posA.y;
+			pos.VZ = posA.z;
+			break;
+
+		case 3:	// 3/4 dystansu miêdzy B i Cp
+			pos.VX = posA.x + houseX;
+			pos.VY = posA.y - (0.5 * houseY);
+			pos.VZ = posA.z;
+			break;
+				
+		case 4:								//punkt Cp
+			pos.VX = posA.x + houseX;
+			pos.VY = posA.y - houseY;
+			pos.VZ = posA.z;						
+			break;
+
+		case 5: // 1/4 dystansu miêdzy B i C
+			pos.VX = posA.x + (0.5 * houseX);
+			pos.VY = posA.y + houseY;
+			pos.VZ = posA.z;
+			break;
+
+		case 6:								//punkt D
+			pos.VX = posA.x + houseX;
+			pos.VY = posA.y + houseY;
+			pos.VZ = posA.z + wallH;
+			break;
+
+		case 7:	// 1/2 dystansu miêdzy D i Ep
+			pos.VX = posA.x + houseX;
+			pos.VY = posA.y;
+			pos.VZ = posA.z + wallH;
+			break;
+
+		case 8:								//punkt Ep
+			pos.VX = posA.x + houseX;
+			pos.VY = posA.y - houseY;
+			pos.VZ = posA.z + wallH;
+			break;
+
+		case 9: // 1/4 dystansu miêdzy Cp i Bp
+			pos.VX = posA.x + (0.5 * houseX);
+			pos.VY = posA.y - houseY;
+			pos.VZ = posA.z;
+			break;
+
+		case 10: // 2/4 dystansu miêdzy B i C
+			pos.VX = posA.x;
+			pos.VY = posA.y + houseY;
+			pos.VZ = posA.z;
+			break;
+
+		case 11: // 1/2 dystansu miêdzy D i E
+			pos.VX = posA.x;
+			pos.VY = posA.y + houseY;
+			pos.VZ = posA.z + wallH;
+			break;
+
+		case 12:							//punkt F
+			pos.VX = posA.x;
+			pos.VY = posA.y;
+			pos.VZ = posA.z + (ROOF*wallH);
+			break;
+
+		case 13: // 1/2 dystansu miêdzy Ep i Dp
+			pos.VX = posA.x;
+			pos.VY = posA.y - houseY;
+			pos.VZ = posA.z + wallH;
+			break;
+
+		case 14: // 2/4 dystansu miêdzy Cp i Bp
+			pos.VX = posA.x;
+			pos.VY = posA.y - houseY;
+			pos.VZ = posA.z;
+			break;
+
+		case 15: // 3/4 dystansu miêdzy B i C
+			pos.VX = posA.x - (0.5 * houseX);
+			pos.VY = posA.y + houseY;
+			pos.VZ = posA.z;
+			break;
+
+		case 16:							//punkt E
+			pos.VX = posA.x - houseX;
+			pos.VY = posA.y + houseY;
+			pos.VZ = posA.z + wallH;
+			break;
+
+		case 17: // 1/2 dystansu miêdzy E i Dp
+			pos.VX = posA.x - houseX;
+			pos.VY = posA.y;
+			pos.VZ = posA.z + wallH;
+			break;
+
+		case 18:							//punkt Dp
+			pos.VX = posA.x - houseX;
+			pos.VY = posA.y - houseY;
+			pos.VZ = posA.z + wallH;
+			break;
+
+		case 19: // 3/4 dystansu miêdzy Cp i Bp	
+			pos.VX = posA.x - (0.5 * houseX);
+			pos.VY = posA.y - houseY;
+			pos.VZ = posA.z;
+			break;
+
+		case 20:							//punkt C	
+			pos.VX = posA.x - houseX;
+			pos.VY = posA.y + houseY;
+			pos.VZ = posA.z;
+			break;
+
+		case 21: // 1/4 dystansu miêdzy C i Bp
+			pos.VX = posA.x - houseX;
+			pos.VY = posA.y + (0.5 * houseY);
+			pos.VZ = posA.z;
+			break;
+
+		case 22: // 2/4 dystansu miêdzy C i Bp
+			pos.VX = posA.x - houseX;
+			pos.VY = posA.y;
+			pos.VZ = posA.z;
+			break;
+
+		case 23: // 3/4 dystansu miêdzy C i Bp
+			pos.VX = posA.x - houseX;
+			pos.VY = posA.y - (0.5 * houseY);
+			pos.VZ = posA.z;
+			break;
+
+		case 24:							//punkt Bp
+			pos.VX = posA.x - houseX;
+			pos.VY = posA.y - houseY;
+			pos.VZ = posA.z;
+			break;
+
+		default:
+			//error! Nie znaleziono punktu na p³acie
+			break;
+	}
+
+
+
+
+	
+
+
+
+    gl_out[gl_InvocationID].gl_Position = pos;			//gl_in[gl_InvocationID].gl_Position;// + (10*houseNum)].gl_Position = gl_in[gl_InvocationID].gl_Position;
+
+}
+
+
+
+/*		KOPIA ZAPASOWA
+
+
+
+switch(gl_InvocationID)
+	{
+		case 0:								//punkt B
+			pos.x = posA.x + houseX;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 5:	// 1/4 dystansu miêdzy B i Cp
+			pos.x = posA.x + houseX;
+			pos.y = posA.y + (0.5 * houseY);
+			pos.z = posA.z;
+			break;
+
+		case 10:	// 2/4 dystansu miêdzy B i Cp
+			pos.x = posA.x + houseX;
+			pos.y = posA.y;
+			pos.z = posA.z;
+			break;
+
+		case 15:	// 3/4 dystansu miêdzy B i Cp
+			pos.x = posA.x + houseX;
+			pos.y = posA.y - (0.5 * houseY);
+			pos.z = posA.z;
+			break;
+				
+		case 20:								//punkt Cp
+			pos.x = posA.x + houseX;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;						
+			break;
+
+		case 1: // 1/4 dystansu miêdzy B i C
+			pos.x = posA.x + (0.5 * houseX);
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 6:								//punkt D
+			pos.x = posA.x + houseX;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 11:	// 1/2 dystansu miêdzy D i Ep
+			pos.x = posA.x + houseX;
+			pos.y = posA.y;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 16:								//punkt Ep
+			pos.x = posA.x + houseX;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 21: // 1/4 dystansu miêdzy Cp i Bp
+			pos.x = posA.x + (0.5 * houseX);
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;
+			break;
+
+		case 2: // 2/4 dystansu miêdzy B i C
+			pos.x = posA.x;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 7: // 1/2 dystansu miêdzy D i E
+			pos.x = posA.x;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 12:							//punkt F
+			pos.x = posA.x;
+			pos.y = posA.y;
+			pos.z = posA.z + (1.5*wallH);
+			break;
+
+		case 17: // 1/2 dystansu miêdzy Ep i Dp
+			pos.x = posA.x;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 22: // 2/4 dystansu miêdzy Cp i Bp
+			pos.x = posA.x;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;
+			break;
+
+		case 3: // 3/4 dystansu miêdzy B i C
+			pos.x = posA.x - (0.5 * houseX);
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 8:							//punkt E
+			pos.x = posA.x - houseX;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 13: // 1/2 dystansu miêdzy E i Dp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 18:							//punkt Dp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z + wallH;
+			break;
+
+		case 23: // 3/4 dystansu miêdzy Cp i Bp	
+			pos.x = posA.x - (0.5 * houseX);
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;
+			break;
+
+		case 4:							//punkt C	
+			pos.x = posA.x - houseX;
+			pos.y = posA.y + houseY;
+			pos.z = posA.z;
+			break;
+
+		case 9: // 1/4 dystansu miêdzy C i Bp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y + (0.5 * houseY);
+			pos.z = posA.z;
+			break;
+
+		case 14: // 2/4 dystansu miêdzy C i Bp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y;
+			pos.z = posA.z;
+			break;
+
+		case 19: // 3/4 dystansu miêdzy C i Bp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y - (0.5 * houseY);
+			pos.z = posA.z;
+			break;
+
+		case 24:							//punkt Bp
+			pos.x = posA.x - houseX;
+			pos.y = posA.y - houseY;
+			pos.z = posA.z;
+			break;
+
+		default:
+			//error! Nie znaleziono punktu na p³acie
+			break;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+======================================================================================================================================================================================================================
+
 	switch(gl_InvocationID)
 	{
 		case 0:								//punkt B
@@ -244,8 +601,4 @@ void main()
 			break;
 	}
 
-
-
-    gl_out[gl_InvocationID].gl_Position = pos;			//gl_in[gl_InvocationID].gl_Position;// + (10*houseNum)].gl_Position = gl_in[gl_InvocationID].gl_Position;
-
-}
+*/

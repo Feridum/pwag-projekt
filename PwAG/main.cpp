@@ -296,7 +296,7 @@ void makeHouse()
 		rand2Tab[i] = rand2;
 	}
 
-	wallHeight = max((float)(WALL_LENGTH / 2.0), (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (WALL_LENGTH / 1.0))));
+	wallHeight = max((float)(WALL_LENGTH / 3.0), (static_cast <float> (rand()) / static_cast <float> (RAND_MAX / (WALL_LENGTH / 1.0))));
 
 	for (int i = 0; i < HOUSE_COUNTER; i++)
 	{
